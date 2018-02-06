@@ -2,12 +2,14 @@
 # md5 0fdb988186be94a062adc9d1c0019463
 
 from bpmicro import cmd
+from bpmicro import util
 from bpmicro.usb import validate_read
 from bpmicro.usb import usb_wraps
 from bpmicro.bp1410_fw import load_fx2
-
 import bpmicro.pic16f84.read_fw
 import bpmicro.pic16f84.write_fw
+
+import time
 
 def my_cmd_57s(dev):
     bulkRead, bulkWrite, controlRead, controlWrite = usb_wraps(dev)
@@ -376,7 +378,27 @@ def replay(dev, cont):
 
     # Generated from packet 1873/1874
     # Times out if chip not inserted
-    cmd.cmd_57s(dev, "\x85", "\x01")
+    #cmd.cmd_57s(dev, "\x85", "\x01")
+    if cont:
+        # Generated from packet 241/242
+        # Takes about 0.05 sec on pass but 0.52 sec on fail
+        tstart = time.time()
+        buff = cmd.cmd_57s(dev, "\x85", None,  "cmd_57")
+        tend = time.time()
+        print 'Continuity test took %0.3f sec' % (tend - tstart,)
+        util.hexdump(buff, label='Continuity', indent='  ')
+        # Chip inserted
+        if buff == "\x01":
+            print 'Continuity OK'
+        # Chip removed
+        elif buff == ("\x02\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00" \
+                    "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"):
+            raise cmd.ContFail('Continuity complete failure (part not inserted?)')
+        # Inserting chip while running
+        # I'm guessing its telling me which pins failed
+        # Lets bend a pin and verify
+        else:
+            raise cmd.ContFail('Continuity partial failure (dirty contacts?  Inserted wrong?)')
 
     # Generated from packet 1877/1878
     cmd.cmd_50(dev, "\x71\x1B")

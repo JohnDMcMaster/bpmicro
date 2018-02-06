@@ -355,7 +355,7 @@ def replay(dev):
 def open_dev(usbcontext=None):
     if usbcontext is None:
         usbcontext = usb1.USBContext()
-    
+
     print 'Scanning for devices...'
     for udev in usbcontext.getDeviceList(skip_on_error=True):
         vid = udev.getVendorID()

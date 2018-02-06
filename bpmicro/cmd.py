@@ -22,6 +22,9 @@ def atomic_probe(dev):
 class BadPrefix(Exception):
     pass
 
+class ContFail(Exception):
+    pass
+
 # prefix: leave to external logic to packetize
 def bulk86(dev, target=None, donef=None, prefix=None):
     bulkRead, _bulkWrite, _controlRead, _controlWrite = usb_wraps(dev)

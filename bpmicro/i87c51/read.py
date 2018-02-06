@@ -16,9 +16,6 @@ import sys
 import inspect
 import time
 
-class ContFail(Exception):
-    pass
-
 def dexit():
     print 'Debug break'
     sys.exit(0)
@@ -274,12 +271,12 @@ def replay1(dev, cont=True):
         # Chip removed
         elif buff == ("\x02\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00" \
                     "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"):
-            raise ContFail('Continuity complete failure (part not inserted?)')
+            raise cmd.ContFail('Continuity complete failure (part not inserted?)')
         # Inserting chip while running
         # I'm guessing its telling me which pins failed
         # Lets bend a pin and verify
         else:
-            raise ContFail('Continuity partial failure (dirty contacts?  Inserted wrong?)')
+            raise cmd.ContFail('Continuity partial failure (dirty contacts?  Inserted wrong?)')
     
     # Atomic with following operation
     # Generated from packet 245/246
