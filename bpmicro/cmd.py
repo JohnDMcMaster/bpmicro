@@ -275,16 +275,19 @@ def periph_dump(dev):
     hexdump(sm_r(dev, 0x00, 0x3F), label="SM", indent='  ')
     import sys; sys.exit(1)
 
+def sm_is_inserted(gpio):
+    return not bool(gpio & gpio_i2s['smn'])
+
 def sm_insert(dev):
     buff = sm_r(dev, 0x10, 0x1F)
-    hexdump(buff, label="sm_insert", indent='  ')
+    #hexdump(buff, label="sm_insert", indent='  ')
     SM2_FMT = '<HHHH24s'
     SM2 = namedtuple('sm', ('ins_all', 'unk1', 'ins_last', 'unk2', 'res'))
     sm = SM2(*struct.unpack(SM2_FMT, buff))
     # Auto increments during some operation
-    print '  Insertions (all): %d' % sm.ins_all
-    print '  Insertions (since last): %d' % sm.ins_last
-    
+    print 'SM insertions (all): %d' % sm.ins_all
+    print 'SM insertions (since last): %d' % sm.ins_last
+
     return sm
 
 def sm_info10(dev):
@@ -317,11 +320,9 @@ def sm_info24(dev):
     validate_read("\x01\x00\x00\x00", buff, "packet 17/18")
 
 def cmd_01(dev):
-    import inspect
-    
     if 1:
         return cmd_01r(dev)
-    
+
     buff = cmd_01r(dev, validate=False)
     if 0:
         where(2)
@@ -367,8 +368,15 @@ def cmd_02(dev, exp, msg='cmd_2'):
     buff = bulk2(dev, "\x02", target=6)
     validate_read(exp, buff, msg)
 
-# clear => present
-GPIO_SM = 0x0001
+gpio_i2s = {
+    # Observed bits
+    'u400': 0x0400,
+    'u40':  0x0040,
+    'u20':  0x0020,
+    'u10':  0x0010,
+    # clear => present
+    'smn':   0x0001,
+}
 # Not sure if this actually is GPIO
 # but seems like a good guess given that it detects socket module insertion
 def gpio_readi(dev):
@@ -384,6 +392,7 @@ def gpio_readi(dev):
             ),
             buff, "packet 128/129")
     return struct.unpack('<H', buff)[0]
+    
 
 def cmd_08(dev, cmd):
     cmdf = "\x08\x01\x57" + cmd + "\x00"
