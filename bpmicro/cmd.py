@@ -138,7 +138,7 @@ def bulk2(dev, cmd, target=None, donef=None, prefix=None):
 
 
 
-def bulk86_next(dev):
+def bulk86_next_read(dev):
     bulkRead, _bulkWrite, _controlRead, _controlWrite = usb_wraps(dev)
     '''
     Ex: need to read 4096 bytes
@@ -165,7 +165,7 @@ def bulk2b(dev, cmd):
     ret = ''
     while True:
         # When is prefix not 0x08?
-        _prefix, this, size = bulk86_next(dev)
+        _prefix, this, size = bulk86_next_read(dev)
         ret += this
         # FIXME: hack
         # Originally I thought this was end of stream flag, but its actually size upper bit

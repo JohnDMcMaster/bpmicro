@@ -368,10 +368,11 @@ def open_dev(usbcontext=None):
             return udev.open()
     raise Exception("Failed to find a device")
 
-def get():
+def get(init=True):
     '''Connect to USB device and return a BP1410 object'''
     usbcontext = usb1.USBContext()
     dev = open_dev(usbcontext)
     dev.claimInterface(0)
-    replay(dev)
+    if init:
+        replay(dev)
     return BP1410(dev, usbcontext)

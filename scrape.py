@@ -131,7 +131,7 @@ def bulk2(p_w, p_rs):
             p_w['packn'][0], p_w['packn'][1],
             len(p_rs),
             p_r['packn'][0], p_r['packn'][1])
-    line('buff = cmd.bulk2(dev, %s)' % (fmt_terse(cmd, p_w['packn'][0]),))
+    line('buff = cmd.bulk2b(dev, %s)' % (fmt_terse(cmd, p_w['packn'][0]),))
     #line('# Discarded %d / %d bytes => %d bytes' % (len(reply_full) - len(reply), len(reply_full), len(reply)))
     line('validate_read(%s, buff, "%s")' % (fmt_terse(reply_all, p_r['packn'][0]), pack_str))
 
