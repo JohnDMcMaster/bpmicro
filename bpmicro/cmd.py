@@ -1,3 +1,7 @@
+'''
+Functionality based on bulk 0x02 write + optional bulk 0x86 read 
+'''
+
 from uvscada.usb import usb_wraps
 from uvscada.usb import validate_read, validate_readv
 from uvscada.util import hexdump, where
@@ -50,12 +54,12 @@ def bulk86(dev, target=None, donef=None, prefix=None):
     def nxt_buff():
         if dbg:
             print '  nxt_buff: reading'
-        p = bulkRead(0x86, 0x0200)
+        p = bytearray(bulkRead(0x86, 0x0200))
         if dbg:
             hexdump(p, label='  nxt_buff', indent='    ')
         #print str2hex(p)
-        prefix_this = ord(p[0])
-        size = (ord(p[-1]) << 8) | ord(p[-2])
+        prefix_this = p[0]
+        size = (p[-1] << 8) | p[-2]
         '''
         if size != len(p) - 3:
             if truncate and size < len(p) - 3:
@@ -132,6 +136,44 @@ def bulk2(dev, cmd, target=None, donef=None, prefix=None):
     bulkWrite(0x02, cmd)
     return bulk86(dev, target=target, donef=donef, prefix=prefix)
 
+
+
+def bulk86_next(dev):
+    bulkRead, _bulkWrite, _controlRead, _controlWrite = usb_wraps(dev)
+    '''
+    Ex: need to read 4096 bytes
+    Max buffer packet size is 512 bytes
+    but for some reason only uses up to 256 bytes of real data
+    + 3 framing bytes and 0 fills the rest to form 512 byte transfer
+    So to transfer the data 
+    '''
+    p = bytearray(bulkRead(0x86, 0x0200))
+    #print str2hex(p)
+    prefix_this = p[0]
+    size = (p[-1] << 8) | p[-2]
+    # No harm seen in always truncating
+    return prefix_this, p[1:1 + size], size
+
+def bulk2b(dev, cmd):
+    '''
+    Issue bulk 0x02 command and collate / return bulk 0x86 responses
+    prefix is always 0x08?
+    '''
+    _bulkRead, bulkWrite, _controlRead, _controlWrite = usb_wraps(dev)
+
+    bulkWrite(0x02, cmd)
+    ret = ''
+    while True:
+        # When is prefix not 0x08?
+        _prefix, this, size = bulk86_next(dev)
+        ret += this
+        # FIXME: hack
+        # Originally I thought this was end of stream flag, but its actually size upper bit
+        # What is the proper check?
+        # Possibly this...next would return 0 bytes?
+        if size < 0x1fd:
+            break
+    return ret
 
 def sn_read(dev):
     # Generated from packet 118/119
@@ -381,12 +423,11 @@ def cmd_0C_mk():
     return "\x0C\x04"
 
 def led_mask(dev, mask):
-    _bulkRead, bulkWrite, _controlRead, _controlWrite = usb_wraps(dev)
-    
     mask = led_s2i.get(mask, mask)
     if mask < 0 or mask > 7:
         raise ValueError("Bad mask")
-    bulkWrite("0x02, \x0C" + chr(mask))
+    #dev.bulkWrite(endpoint, data, timeout=timeout)
+    dev.bulkWrite(0x02, "\x0C" + chr(mask), timeout=1000)
 
 def led_mask_30(dev, mask):
     mask = led_s2i.get(mask, mask)
@@ -559,3 +600,25 @@ def cmd_57_50(dev, c57, c50):
 # cmd_DB
 
 # cmd_E9
+
+def readB0(dev):
+    _bulkRead, bulkWrite, controlRead, controlWrite = usb_wraps(dev)
+
+    # Atomic
+    # Generated from packet 11/12
+    buff = controlRead(0xC0, 0xB0, 0x0000, 0x0000, 4096)
+    # Req: 4096, got: 3
+    validate_read("\x00\x00\x00", buff, "packet 11/12")
+    # Generated from packet 13/14
+    buff = bulk86(dev, target=0x01)
+    validate_read("\x16", buff, "packet 13/14")
+
+def cmd_1438(dev):
+    # Generated from packet 253/254
+    buff = bulk2(dev, 
+        "\x14\x38\x25\x00\x00\x04\x00\x90\x32\x90\x00\xA7\x02\x1F\x00\x14" \
+        "\x40\x25\x00\x00\x01\x00\x3C\x36\x0E\x01", target=0x20)
+    validate_read(
+        "\x14\x00\x54\x41\x38\x34\x56\x4C\x56\x5F\x46\x58\x34\x00\x00\x00" \
+        "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x3E\x2C",
+        buff, "packet W: 253/254, R: 255/256")

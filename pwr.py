@@ -1,19 +1,18 @@
 import binascii
 import time
 import usb1
-import libusb1
 import sys
 import struct
 
 from uvscada.wps7 import WPS7
 
-from uvscada.usb import usb_wraps
-from uvscada.bpm.bp1410_fw import load_fx2
-from uvscada.bpm import bp1410_fw_sn, startup
-from uvscada.bpm.startup import bulk2, bulk86, sm_read, gpio_readi, led_mask
-from uvscada.util import hexdump, add_bool_arg
-from uvscada.util import str2hex
-from uvscada.usb import validate_read, validate_readv
+from bpmicro.usb import usb_wraps
+from bpmicro.bp1410_fw import load_fx2
+from bpmicro import bp1410_fw_sn, startup
+from bpmicro.startup import bulk2, bulk86, sm_read, gpio_readi, led_mask
+from bpmicro.util import hexdump, add_bool_arg
+from bpmicro.util import str2hex
+from bpmicro.usb import validate_read, validate_readv
 
 def dexit():
     print 'Debug break'

@@ -1,50 +1,34 @@
-import binascii
-import time
-import usb1
-import libusb1
-import sys
-import struct
+from bpmicro import startup
+from bpmicro import cmd
+from bpmicro.util import add_bool_arg
 
-from uvscada.wps7 import WPS7
-
-from uvscada.bpm import startup
-from uvscada.bpm.startup import led_mask
-from uvscada.util import hexdump, add_bool_arg
-
-def open_dev(usbcontext=None):
-    if usbcontext is None:
-        usbcontext = usb1.USBContext()
-    
-    print 'Scanning for devices...'
-    for udev in usbcontext.getDeviceList(skip_on_error=True):
-        vid = udev.getVendorID()
-        pid = udev.getProductID()
-        if (vid, pid) == (0x14b9, 0x0001):
-            print
-            print
-            print 'Found device'
-            print 'Bus %03i Device %03i: ID %04x:%04x' % (
-                udev.getBusNumber(),
-                udev.getDeviceAddress(),
-                vid,
-                pid)
-            return udev.open()
-    raise Exception("Failed to find a device")
+led_s2i = {
+            'fail': 1,
+            'active': 2,
+            'pass': 4,
+            'red': 1,
+            'orange': 2,
+            'green': 4,
+            }
 
 if __name__ == "__main__":
     import argparse 
     
-    parser = argparse.ArgumentParser(description='Replay captured USB packets')
+    parser = argparse.ArgumentParser(description='Control LED')
     add_bool_arg(parser, '--cycle', default=False, help='') 
-    parser.add_argument('status', help='') 
+    parser.add_argument('status', help='String value or 0-7 direct mask, 1: fail, 2: active, 4: pass')
     args = parser.parse_args()
 
     if args.cycle:
         startup.cycle()
 
-    usbcontext = usb1.USBContext()
-    dev = open_dev(usbcontext)
-    dev.claimInterface(0)
-    startup.replay(dev)
+    try:
+        status = int(args.status, 0)
+    except ValueError:
+        try:
+            status = led_s2i[args.status]
+        except KeyError:
+            raise Exception("Bad status value %s" % args.status)
 
-    startup.led_mask(dev, args.status)
+    bp = startup.get()
+    cmd.led_mask(bp.dev, status)

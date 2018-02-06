@@ -1,6 +1,6 @@
-from uvscada.bpm import startup, cmd
-from uvscada.util import hexdump, add_bool_arg
-from uvscada.bpm.i87c51.read import replay
+from bpmicro import startup, cmd
+from bpmicro.util import hexdump, add_bool_arg
+from bpmicro.i87c51.read import replay
 
 if __name__ == "__main__":
     import argparse 
@@ -15,9 +15,9 @@ if __name__ == "__main__":
     if args.cycle:
         startup.cycle()
 
-    dev, usbcontext = startup.get()
+    bp = startup.get()
 
-    fw_in = replay(dev, cont=args.cont)
+    fw_in = replay(bp.dev, cont=args.cont)
     if args.fout:
         print 'Writing to %s' % args.fout
         open(args.fout, 'w').write(fw_in)

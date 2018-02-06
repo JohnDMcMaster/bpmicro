@@ -6,14 +6,14 @@ import sys
 import struct
 import inspect
 
-from uvscada.usb import usb_wraps
-from uvscada.bpm.bp1410_fw import load_fx2
-from uvscada.bpm import bp1410_fw_sn, startup
-from uvscada.bpm.cmd import bulk2, bulk86
-from uvscada.bpm.cmd import sm_read, gpio_readi, led_mask_30, cmd_49, cmd_02, cmd_50, cmd_57s, cmd_57_94, cmd_57_50
-from uvscada.bpm.cmd import sm_info0, sm_info1, sm_insert, sn_read, sm_info22, sm_info24, sm_info10
-from uvscada.util import str2hex, hexdump
-from uvscada.usb import validate_read, validate_readv
+from bpmicro.usb import usb_wraps
+from bpmicro.bp1410_fw import load_fx2
+from bpmicro import bp1410_fw_sn, startup
+from bpmicro.cmd import bulk2, bulk86
+from bpmicro.cmd import sm_read, gpio_readi, led_mask_30, cmd_49, cmd_02, cmd_50, cmd_57s, cmd_57_94, cmd_57_50
+from bpmicro.cmd import sm_info0, sm_info1, sm_insert, sn_read, sm_info22, sm_info24, sm_info10
+from bpmicro.util import str2hex, hexdump
+from bpmicro.usb import validate_read, validate_readv
 
 import read
 import read_fw
@@ -21,26 +21,6 @@ import write_fw
 
 class NotBlank(Exception):
     pass
-
-def open_dev(usbcontext=None):
-    if usbcontext is None:
-        usbcontext = usb1.USBContext()
-    
-    print 'Scanning for devices...'
-    for udev in usbcontext.getDeviceList(skip_on_error=True):
-        vid = udev.getVendorID()
-        pid = udev.getProductID()
-        if (vid, pid) == (0x14b9, 0x0001):
-            print
-            print
-            print 'Found device'
-            print 'Bus %03i Device %03i: ID %04x:%04x' % (
-                udev.getBusNumber(),
-                udev.getDeviceAddress(),
-                vid,
-                pid)
-            return udev.open()
-    raise Exception("Failed to find a device")
 
 # sm scan for large values
 # Exception: prefix: wanted 0x08, got 0x2C

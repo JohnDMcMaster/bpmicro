@@ -1,6 +1,6 @@
-from uvscada.bpm import startup, cmd
-from uvscada.util import hexdump, add_bool_arg
-from uvscada.bpm.i87c51.write import replay
+from bpmicro import startup
+from bpmicro.util import add_bool_arg
+from bpmicro.i87c51.write import replay
 
 if __name__ == "__main__":
     import argparse 
@@ -15,7 +15,7 @@ if __name__ == "__main__":
     if args.cycle:
         startup.cycle()
 
-    dev, usbcontext = startup.get()
+    bp = startup.get()
 
     if args.fin:
         fw = open(args.fin, 'r').read()
@@ -23,6 +23,6 @@ if __name__ == "__main__":
         fw = 4096 * '\xFF'
     if len(fw) != 4096:
         raise Exception("Bad FW length")
-    replay(dev, fw, cont=args.cont, blank=args.blank)
+    replay(bp.dev, fw, cont=args.cont, blank=args.blank)
 
     print 'Complete'

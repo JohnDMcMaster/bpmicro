@@ -1,17 +1,15 @@
-from uvscada.usb import usb_wraps
-from uvscada.bpm import startup
-from uvscada.bpm.cmd import bulk2, bulk86
-from uvscada.bpm.cmd import sm_read, led_mask_30
-from uvscada.bpm.cmd import cmd_20_mk, cmd_49, cmd_02, cmd_50, cmd_50_mk, cmd_0C_mk, cmd_57s, cmd_57_50, cmd_41, cmd_43, cmd_10, cmd_45
-from uvscada.bpm.cmd import cmd_4C, cmd_09, cmd_08, cmd_3B, cmd_4A
-from uvscada.bpm.cmd import sm_info0, sm_info1, sm_insert, sn_read, sm_info10
-from uvscada.bpm.cmd import atomic_probe
-from uvscada.util import hexdump, add_bool_arg
-from uvscada.usb import validate_read, validate_readv
-from uvscada.bpm.cmd import cmd_01
-from uvscada.util import hexdump
-
 import read_fw
+from bpmicro.usb import usb_wraps
+from bpmicro.util import hexdump
+
+from bpmicro.cmd import bulk2, bulk86
+from bpmicro.cmd import sm_read, led_mask_30
+from bpmicro.cmd import cmd_20_mk, cmd_49, cmd_02, cmd_50, cmd_50_mk, cmd_0C_mk, cmd_57s, cmd_57_50, cmd_41, cmd_43, cmd_10, cmd_45
+from bpmicro.cmd import cmd_4C, cmd_09, cmd_08, cmd_3B, cmd_4A
+from bpmicro.cmd import sm_info0, sm_info1, sm_insert, sn_read, sm_info10
+from bpmicro.usb import validate_read
+from bpmicro.cmd import cmd_01
+from bpmicro import cmd
 
 import usb1
 import sys
@@ -39,26 +37,17 @@ def replay(dev, cont):
 
 def replay1(dev, cont=True):
     _bulkRead, bulkWrite, controlRead, controlWrite = usb_wraps(dev)
-
-    # Atomic
-    # Generated from packet 11/12
-    buff = controlRead(0xC0, 0xB0, 0x0000, 0x0000, 4096)
-    # Req: 4096, got: 3
-    validate_read("\x00\x00\x00", buff, "packet 11/12")
-    # Generated from packet 13/14
-    buff = bulk86(dev, target=0x01)
-    validate_read("\x16", buff, "packet 13/14")
+    
+    cmd.readB0(dev)
 
     # Generated from packet 15/16
     cmd_01(dev)
 
     # NOTE:: req max 512 but got 136
     # Generated from packet 19/20
-    buff = bulk2(dev, 
+    buff = cmd.bulk2(dev, 
         "\x43\x19\x10\x00\x00\x3B\x7E\x25\x00\x00\xFE\xFF\x3B\x7C\x25\x00" \
-        "\x00\xFE\xFF\x00"
-        , target=0x02)
-    
+        "\x00\xFE\xFF\x00", target=0x02)
     validate_read("\xA4\x06", buff, "packet W: 19/20, R: 21/22")
 
     # Generated from packet 23/24
@@ -67,17 +56,8 @@ def replay1(dev, cont=True):
     # Generated from packet 27/28
     sn_read(dev)
 
-    # NOTE:: req max 512 but got 35
     # Generated from packet 31/32
-    buff = bulk2(dev, 
-        "\x14\x38\x25\x00\x00\x04\x00\x90\x32\x90\x00\xA7\x02\x1F\x00\x14" \
-        "\x40\x25\x00\x00\x01\x00\x3C\x36\x0E\x01"
-        , target=0x20)
-    
-    validate_read(
-        "\x14\x00\x54\x41\x38\x34\x56\x4C\x56\x5F\x46\x58\x34\x00\x00\x00" \
-        "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x3E\x2C"
-        , buff, "packet W: 31/32, R: 33/34")
+    cmd.cmd_1438(dev)
 
     sm_info1(dev)
     
