@@ -36,7 +36,7 @@ def boot_cold(dev):
     validate_read("\xA4\x06", buff, "packet 72/73")
     
     # Generated from packet 74/75
-    cmd.cmd_01(dev)
+    #cmd.cmd_01(dev)
     
     # Atomic
     #cmd.cmd_01 state: 0x80 => 0x81
@@ -56,7 +56,7 @@ def boot_cold(dev):
     buff = cmd.bulk2(dev, "\x5A", target=1)
     validate_read("\x80", buff, "packet 92/93")
 
-    cmd.cmd_01(dev) # temp
+    #cmd.cmd_01(dev) # temp
     
     # Atomic
     #cmd.cmd_01 state: 0x81 => 0x82
@@ -68,7 +68,7 @@ def boot_cold(dev):
     buff = cmd.bulk2(dev, "\xA6", target=1)
     validate_read("\x81", buff, "packet 100/101")
 
-    cmd.cmd_01(dev) # temp
+    #cmd.cmd_01(dev) # temp
     
     # Atomic
     #cmd.cmd_01 state: 0x82 => 0x83
@@ -84,7 +84,7 @@ def boot_cold(dev):
     buff = cmd.bulk2(dev, "\xDB", target=1)
     validate_read("\x82", buff, "packet 108/109")
     
-    cmd.cmd_01(dev) # temp
+    #cmd.cmd_01(dev) # temp
     
     #cmd.cmd_01 state: 0x83 => 0x80.  Length 129 => 133
     # Generated from packet 110/111
@@ -92,7 +92,7 @@ def boot_cold(dev):
     validate_read("\x16", buff, "packet 112/113")
     
     # Generated from packet 114/115
-    cmd.cmd_01(dev)
+    #cmd.cmd_01(dev)
 
 def boot_warm(dev):
     # Generated from packet 70/71
@@ -103,7 +103,7 @@ def boot_warm(dev):
     validate_read("\xA4\x06", buff, "packet 72/73")
     
     # Generated from packet 74/75
-    cmd.cmd_01(dev)
+    #cmd.cmd_01(dev)
 
 def replay(dev):
     bulkRead, bulkWrite, controlRead, controlWrite = usb_wraps(dev)
@@ -172,9 +172,9 @@ def replay(dev):
     # Packets going forward are from cold boot since its more canonical / clean
     # warm -40 packet (ie 120 cold => 80 warm)
 
-    cmd.sn_read(dev)
+    #cmd.sn_read(dev)
 
-    cmd.cmd_01(dev) # temp
+    #cmd.cmd_01(dev) # temp
     
     # Generated from packet 122/123
     buff = cmd.bulk2(dev, "\x14\x38\x25\x00\x00\x04\x00\x90\x32\x90\x00\xA7\x02\x1F\x00\x14"
@@ -183,21 +183,21 @@ def replay(dev):
               "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x3E"
               "\x2C", buff, "packet 124/125")
 
-    cmd.cmd_01(dev) # temp
+    #cmd.cmd_01(dev) # temp
     
     # Generated from packet 126/127
-    cmd.gpio_readi(dev)
+    #cmd.gpio_readi(dev)
 
-    cmd.cmd_01(dev) # temp
+    #cmd.cmd_01(dev) # temp
     
     # Generated from packet 130/131
-    cmd.gpio_readi(dev)
+    #cmd.gpio_readi(dev)
     
     # Generated from packet 134/135
-    cmd.sm_read(dev)
+    #cmd.sm_read(dev)
     
     # Generated from packet 138/139
-    cmd.cmd_01(dev)
+    #cmd.cmd_01(dev)
     
     # Generated from packet 142/143
     bulkWrite(0x02, "\x43\x19\x00\x00\x00")
@@ -228,19 +228,19 @@ def replay(dev):
     cmd.cmd_49(dev)
 
     # Generated from packet 160/161
-    cmd.gpio_readi(dev)
+    #cmd.gpio_readi(dev)
 
     # Generated from packet 164/165
-    cmd.gpio_readi(dev)
+    #cmd.gpio_readi(dev)
 
     # Generated from packet 168/169
-    cmd.sm_read(dev)
+    #cmd.sm_read(dev)
 
     # Generated from packet 172/173
     bulkWrite(0x02, "\x3B\x0C\x22\x00\xC0\x30\x00\x3B\x0E\x22\x00\xC0\x00\x00\x3B\x1A"
               "\x22\x00\xC0\x18\x00")
 
-    cmd.cmd_01(dev) # temp
+    #cmd.cmd_01(dev) # temp
     
     # Generated from packet 174/175
     buff = cmd.bulk2(dev, "\x4A\x03\x00\x00\x00", target=2)
@@ -319,13 +319,13 @@ def replay(dev):
               "\x2C", buff, "packet 208/209")
 
     # Generated from packet 210/211
-    cmd.gpio_readi(dev)
+    #cmd.gpio_readi(dev)
 
     # Generated from packet 214/215
-    cmd.gpio_readi(dev)
+    #cmd.gpio_readi(dev)
 
     # Generated from packet 218/219
-    cmd.sm_read(dev)
+    #cmd.sm_read(dev)
     
     # Atomic
     #cmd.cmd_01 state: 0x82 => 0x83
@@ -348,9 +348,9 @@ def replay(dev):
     validate_read("\xAB", buff, "packet 234/235")
 
     # Generated from packet 236/237
-    cmd.gpio_readi(dev)
+    #cmd.gpio_readi(dev)
 
-    cmd.cmd_01(dev) # temp
+    #cmd.cmd_01(dev) # temp
 
 def open_dev(usbcontext=None):
     if usbcontext is None:
@@ -361,8 +361,6 @@ def open_dev(usbcontext=None):
         vid = udev.getVendorID()
         pid = udev.getProductID()
         if (vid, pid) == (0x14b9, 0x0001):
-            print
-            print
             print 'Found device'
             print 'Bus %03i Device %03i: ID %04x:%04x' % (
                 udev.getBusNumber(),
