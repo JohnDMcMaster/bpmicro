@@ -208,14 +208,18 @@ def peek_bulk2(p):
     elif cmd == "\x4A\x03\x00\x00\x00":
         cmp_buff("\x03\x00", reply)
         line('cmd.cmd_4A(dev)')
-    # Observed several times as compound command
-    # Only handle simple case
-    elif cmd[0] == "\x57" and len(cmd) == 3:
-        cmp_mask(
-                "\x57\x00\x00",
-                "\xFF\x00\xFF",
-                cmd)
-        line('cmd.cmd_57s(dev, %s, %s)' % (fmt_terse(cmd[1]), fmt_terse(reply)))
+    # Prefix and postfix seem fixed
+    # Length 3 and 6 are both common
+    #elif len(cmd) % 3 == 0 and cmd[0] == "\x57" and cmd[-1] == "\x00":
+    elif len(cmd) in (3, 6) and cmd[0] == "\x57" and cmd[-1] == "\x00":
+        cmds = ''
+        for i in xrange(0, len(cmd), 3):
+            if cmd[i] != "\x57":
+                raise Exception()
+            if cmd[i+2] != "\x00":
+                raise Exception()
+            cmds += cmd[i+1]
+        line('cmd.cmd_57s(dev, %s, %s)' % (fmt_terse(cmds), fmt_terse(reply)))
     # Unknown response
     # Do generic bulk read
     else:
