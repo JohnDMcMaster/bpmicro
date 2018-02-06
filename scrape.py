@@ -19,6 +19,9 @@ if 1:
     import bpmicro.pic16f84.write_fw
     fw_mods['bpmicro.pic16f84.write_fw'] = bpmicro.pic16f84.write_fw.p_p2n
 
+pi = None
+ps = None
+
 prefix = ' ' * 8
 indent = ''
 def line(s):
@@ -29,6 +32,8 @@ def indentP():
 def indentN():
     global indent
     indent = indent[4:]
+
+dumb = False
 
 # args.big_thresh
 big_pkt = {}
@@ -108,7 +113,195 @@ def cmp_mask(exp, mask, act):
             hexdump(act, indent='  ', label='actual')
             raise CmpFail("Exp: 0x%02X, act: 0x%02X" % (ord(exp), ord(actc)))
 
-def dump(fin, dumb=False):
+def peekp():
+    return nextp()[1]
+
+def nextp():
+    ppi = pi + 1
+    while True:
+        if ppi >= len(ps):
+            raise Exception("Out of packets")
+        p = ps[ppi]
+        if p['type'] != 'comment':
+            return ppi, p
+        ppi = ppi + 1
+
+def peek_bulk2(p):
+    global pi
+
+    def bulk2():
+        if pprefix != 0x08:
+            pprefix_str = ', prefix=0x%02X' % pprefix
+            raise Exception(pprefix_str)
+        pack_str = 'packet W: %s/%s, R: %s/%s' % (
+                p_w['packn'][0], p_w['packn'][1], p_r['packn'][0], p_r['packn'][1])
+        line('buff = cmd.bulk2(dev, %s)' % (fmt_terse(cmd, p_w['packn'][0]),))
+        #line('# Discarded %d / %d bytes => %d bytes' % (len(reply_full) - len(reply), len(reply_full), len(reply)))
+        line('validate_read(%s, buff, "%s")' % (fmt_terse(reply, p_r['packn'][0]), pack_str))
+    
+    p_w = p
+    pi, p_r = nextp()
+    cmd = binascii.unhexlify(p_w['data'])
+    reply_full = binascii.unhexlify(p_r['data'])
+    if 0:
+        line("'''")
+        line(fmt_terse(reply_full, p['packn'][0]))
+        line("'''")
+    reply, _truncate, pprefix, suffix = pkt_strip(reply_full)
+    if cmd == "\x01":
+        line('cmd.cmd_01(dev)')
+    elif cmd == "\x02":
+        line('cmd.cmd_02(dev, %s)' % fmt_terse(reply))
+    elif cmd == "\x03":
+        line('cmd.gpio_readi(dev)')
+    elif 0 and cmd[0] == "\x08":
+        cmp_mask(
+                "\x08\x01\x57\x00\x00",
+                "\xFF\xFF\xFF\x00\xFF",
+                cmd)
+        try:
+            cmp_buff("\x00\x00", reply)
+        except CmpFail:
+            line('# Bad reply for cmd_08()')
+            bulk2()
+        else:
+            line('cmd.cmd_08(dev, %s)' % (fmt_terse(cmd[3])))
+    elif cmd[0] == "\x0C":
+        if len(cmd) != 3 or cmd[2] != "\x30":
+            raise Exception("Unexpected")
+        #line('led_mask(dev, 0x%02X)' % ord(cmd[1]))
+        line('cmd.led_mask(dev, "%s")' % led_i2s[ord(cmd[1])])
+    elif cmd == "\x0E\x00":
+        line('cmd.sn_read(dev)')
+    elif cmd == "\x0E\x02":
+        line('cmd.sm_read(dev)')
+    elif cmd == "\x10\x80\x02":
+        cmp_buff("\x80\x00\x00\x00\x09\x00", reply)
+        line('cmd.cmd_10(dev)')
+    elif cmd[0] == "\x22":
+        if cmd == "\x22\x02\x10\x00\x13\x00\x06":
+            line('cmd.sm_info10(dev)')
+        elif cmd == "\x22\x02\x10\x00\x1F\x00\x06":
+            line('cmd.sm_insert(dev)')
+        elif cmd == "\x22\x02\x22\x00\x23\x00\x06":
+            line('cmd.sm_info22(dev)')
+        elif cmd == "\x22\x02\x24\x00\x25\x00\x06":
+            line('cmd.sm_info24(dev)')
+        else:
+            #raise Exception("Unexpected read")
+            line('# Unexpected SM read')
+            bulk2()
+    elif cmd == "\x45\x01\x00\x00\x31\x00\x06":
+        cmp_buff( \
+                "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF" \
+                "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF" \
+                "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF" \
+                "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF" \
+                "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF" \
+                "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF" \
+                "\xFF\xFF\xFF\xFF",
+                reply)
+        line('cmd.cmd_45(dev)')
+    elif cmd == "\x49":
+        cmp_buff("\x0F\x00", reply)
+        line('cmd.cmd_49(dev)')
+    elif cmd == "\x4A\x03\x00\x00\x00":
+        cmp_buff("\x03\x00", reply)
+        line('cmd.cmd_4A(dev)')
+    # Observed several times as compound command
+    # Only handle simple case
+    elif cmd[0] == "\x57" and len(cmd) == 3:
+        cmp_mask(
+                "\x57\x00\x00",
+                "\xFF\x00\xFF",
+                cmd)
+        line('cmd.cmd_57s(dev, %s, %s)' % (fmt_terse(cmd[1]), fmt_terse(reply)))
+    else:
+        bulk2()
+
+def bulk86_next_read(p):
+    if p['type'] != 'bulkRead':
+        raise Exception("Unexpected type")
+    if p['endp'] != 0x86:
+        raise Exception("Unexpected endpoint")
+    reply_full = binascii.unhexlify(p['data'])
+    reply, _truncate, pprefix, _suffix = pkt_strip(reply_full)
+    if pprefix != 0x08:
+        pprefix_str = ', prefix=0x%02X' % pprefix
+        raise Exception(pprefix_str)
+    #line('# Discarded %d / %d bytes => %d bytes' % (len(reply_full) - len(reply), len(reply_full), len(reply)))
+    pack_str = 'packet %s/%s' % (
+             p['packn'][0], p['packn'][1])
+    line('_prefix, buff, _size = cmd.bulk86_next_read(dev)')
+    line('validate_read(%s, buff, "%s")' % (fmt_terse(reply, p['packn'][0]), pack_str))
+
+def bulk_write(p):
+    global pi
+
+    '''
+    bulkWrite(0x02, "\x01")
+    '''
+    # Not all 0x02 have readback
+    # bulkWrite(0x%02X
+    if p['endp'] != 0x02:
+        cmd = binascii.unhexlify(p['data'])
+        line('bulkWrite(0x%02X, %s)' % (p['endp'], fmt_terse(cmd, p['packn'][0])))
+    # Write followed by response read?
+    # bulk2(
+    elif not dumb and peekp()['type'] == 'bulkRead':
+        peek_bulk2(p)
+    # Write without following readback
+    else:
+        cmd = binascii.unhexlify(p['data'])
+        if dumb:
+            line('bulkWrite(0x02, %s)' % (fmt_terse(cmd, p['packn'][0])))
+            # peked not actually fetched
+            #bulk86_next_read(p)
+        elif cmd == "\x09\x10\x57\x81\x00":
+            line("cmd.cmd_09(dev)")
+        elif cmd[0] == '\x0C' and len(cmd) == 2:
+            line('cmd.led_mask(dev, 0x%02X)' % ord(cmd[1]))
+        elif cmd == "\x20\x01\x00":
+            line('cmd.cmd_20(dev)')
+        elif cmd == \
+                "\x3B\x0C\x22\x00\xC0\x40\x00\x3B\x0E\x22\x00\xC0\x00\x00\x3B\x1A" \
+                "\x22\x00\xC0\x18\x00":
+            line('cmd.cmd_3B(dev)')
+        elif cmd == "\x41\x00\x00":
+            line('cmd.cmd_41(dev)')
+        elif cmd == "\x43\x19\x10\x00\x00":
+            line('cmd.cmd_43(dev)')
+        elif cmd == "\x4C\x00\x02":
+            line('cmd.cmd_4C(dev)')
+        elif cmd[0] == "\x57" and len(cmd) == 7:
+            c57a = cmd[0:3]
+            cmp_mask(
+                    "\x57\x00\x00" ,
+                    "\xFF\x00\xFF" ,
+                    c57a)
+
+            c50a = cmd[3:]
+            cmp_mask(
+                    "\x50\x00\x00\x00" ,
+                    "\xFF\x00\xFF\xFF" ,
+                    c50a)
+            
+            line('cmd.cmd_57_50(dev, %s, %s)' % (fmt_terse(c57a[1]), fmt_terse(c50a[1])))
+        elif cmd[0] == "\x50":
+            # ex: "\x50\x9F\x09\x00\x00"
+            cmp_mask(
+                    "\x50\x00\x00\x00\x00",
+                    "\xFF\x00\x00\xFF\xFF",
+                    cmd)
+            line('cmd.cmd_50(dev, %s)' % (fmt_terse(cmd[1:3])))
+        else:
+            line('bulkWrite(0x02, %s)' % (fmt_terse(cmd, p['packn'][0])))
+
+def dump(fin):
+    #global j
+    global pi
+    global ps
+
     j = json.load(open(fin))
     pi = 0
     ps = j['data']
@@ -145,19 +338,6 @@ def dump(fin, dumb=False):
     # we'll add our own anyway
     # ps = filter(lambda p: p['type'] != 'comment', ps)
     
-    def peekp():
-        return nextp()[1]
-
-    def nextp():
-        ppi = pi + 1
-        while True:
-            if ppi >= len(ps):
-                raise Exception("Out of packets")
-            p = ps[ppi]
-            if p['type'] != 'comment':
-                return ppi, p
-            ppi = ppi + 1
-    
     line('def replay(dev):')
     indentP()
     line("bulkRead, bulkWrite, controlRead, controlWrite = usb_wraps(dev)")
@@ -169,20 +349,6 @@ def dump(fin, dumb=False):
         line("# Generated from packet 71/72")
         line("load_fx2(dev)")
         line()
-
-    def bulk86_next(p):
-        if p['endp'] != 0x86:
-            raise Exception("Unexpected endpoint")
-        reply_full = binascii.unhexlify(p['data'])
-        reply, _truncate, pprefix, _suffix = pkt_strip(reply_full)
-        if pprefix != 0x08:
-            pprefix_str = ', prefix=0x%02X' % pprefix
-            raise Exception(pprefix_str)
-        #line('# Discarded %d / %d bytes => %d bytes' % (len(reply_full) - len(reply), len(reply_full), len(reply)))
-        pack_str = 'packet %s/%s' % (
-                 p['packn'][0], p['packn'][1])
-        line('_prefix, buff, _size = cmd.bulk86_next(dev)')
-        line('validate_read(%s, buff, "%s")' % (fmt_terse(reply, p['packn'][0]), pack_str))
 
     
     while pi < len(ps):
@@ -216,157 +382,9 @@ def dump(fin, dumb=False):
             line('buff = controlWrite(0x%02X, 0x%02X, 0x%04X, 0x%04X, %s)' % (
                     p['reqt'], p['req'], p['val'], p['ind'], str2hex(data, prefix=prefix)))
         elif p['type'] == 'bulkRead':
-            bulk86_next(p)
+            bulk86_next_read(p)
         elif p['type'] == 'bulkWrite':
-            '''
-            bulkWrite(0x02, "\x01")
-            '''
-            # Not all 0x02 have readback
-            # bulkWrite(0x%02X
-            if p['endp'] != 0x02:
-                cmd = binascii.unhexlify(p['data'])
-                line('bulkWrite(0x%02X, %s)' % (p['endp'], fmt_terse(cmd, p['packn'][0])))
-            # Write followed by response read?
-            # bulk2(
-            elif peekp()['type'] == 'bulkRead':
-                def bulk2():
-                    if pprefix != 0x08:
-                        pprefix_str = ', prefix=0x%02X' % pprefix
-                        raise Exception(pprefix_str)
-                    pack_str = 'packet W: %s/%s, R: %s/%s' % (
-                            p_w['packn'][0], p_w['packn'][1], p_r['packn'][0], p_r['packn'][1])
-                    line('buff = cmd.bulk2(dev, %s)' % (fmt_terse(cmd, p_w['packn'][0]),))
-                    #line('# Discarded %d / %d bytes => %d bytes' % (len(reply_full) - len(reply), len(reply_full), len(reply)))
-                    line('validate_read(%s, buff, "%s")' % (fmt_terse(reply, p_r['packn'][0]), pack_str))
-                
-                p_w = p
-                pi, p_r = nextp()
-                cmd = binascii.unhexlify(p_w['data'])
-                reply_full = binascii.unhexlify(p_r['data'])
-                if 0:
-                    line("'''")
-                    line(fmt_terse(reply_full, p['packn'][0]))
-                    line("'''")
-                reply, _truncate, pprefix, suffix = pkt_strip(reply_full)
-                if dumb:
-                    line('bulkWrite(0x02, %s)' % fmt_terse(cmd, p_w['packn'][0]))
-                    bulk86_next(p_r)
-                elif cmd == "\x01":
-                    line('cmd.cmd_01(dev)')
-                elif cmd == "\x02":
-                    line('cmd.cmd_02(dev, %s)' % fmt_terse(reply))
-                elif cmd == "\x03":
-                    line('cmd.gpio_readi(dev)')
-                elif 0 and cmd[0] == "\x08":
-                    cmp_mask(
-                            "\x08\x01\x57\x00\x00",
-                            "\xFF\xFF\xFF\x00\xFF",
-                            cmd)
-                    try:
-                        cmp_buff("\x00\x00", reply)
-                    except CmpFail:
-                        line('# Bad reply for cmd_08()')
-                        bulk2()
-                    else:
-                        line('cmd.cmd_08(dev, %s)' % (fmt_terse(cmd[3])))
-                elif cmd[0] == "\x0C":
-                    if len(cmd) != 3 or cmd[2] != "\x30":
-                        raise Exception("Unexpected")
-                    #line('led_mask(dev, 0x%02X)' % ord(cmd[1]))
-                    line('cmd.led_mask(dev, "%s")' % led_i2s[ord(cmd[1])])
-                elif cmd == "\x0E\x00":
-                    line('cmd.sn_read(dev)')
-                elif cmd == "\x0E\x02":
-                    line('cmd.sm_read(dev)')
-                elif cmd == "\x10\x80\x02":
-                    cmp_buff("\x80\x00\x00\x00\x09\x00", reply)
-                    line('cmd.cmd_10(dev)')
-                elif cmd[0] == "\x22":
-                    if cmd == "\x22\x02\x10\x00\x13\x00\x06":
-                        line('cmd.sm_info10(dev)')
-                    elif cmd == "\x22\x02\x10\x00\x1F\x00\x06":
-                        line('cmd.sm_insert(dev)')
-                    elif cmd == "\x22\x02\x22\x00\x23\x00\x06":
-                        line('cmd.sm_info22(dev)')
-                    elif cmd == "\x22\x02\x24\x00\x25\x00\x06":
-                        line('cmd.sm_info24(dev)')
-                    else:
-                        #raise Exception("Unexpected read")
-                        line('# Unexpected SM read')
-                        bulk2()
-                elif cmd == "\x45\x01\x00\x00\x31\x00\x06":
-                    cmp_buff( \
-                            "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF" \
-                            "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF" \
-                            "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF" \
-                            "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF" \
-                            "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF" \
-                            "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF" \
-                            "\xFF\xFF\xFF\xFF",
-                            reply)
-                    line('cmd.cmd_45(dev)')
-                elif cmd == "\x49":
-                    cmp_buff("\x0F\x00", reply)
-                    line('cmd.cmd_49(dev)')
-                elif cmd == "\x4A\x03\x00\x00\x00":
-                    cmp_buff("\x03\x00", reply)
-                    line('cmd.cmd_4A(dev)')
-                # Observed several times as compound command
-                # Only handle simple case
-                elif cmd[0] == "\x57" and len(cmd) == 3:
-                    cmp_mask(
-                            "\x57\x00\x00",
-                            "\xFF\x00\xFF",
-                            cmd)
-                    line('cmd.cmd_57s(dev, %s, %s)' % (fmt_terse(cmd[1]), fmt_terse(reply)))
-                else:
-                    bulk2()
-            # Write without following readback
-            else:
-                cmd = binascii.unhexlify(p['data'])
-                if dumb:
-                    line('bulkWrite(0x02, %s)' % (fmt_terse(cmd, p['packn'][0])))
-                    # peked not actually fetched
-                    #bulk86_next(p)
-                elif cmd == "\x09\x10\x57\x81\x00":
-                    line("cmd.cmd_09(dev)")
-                elif cmd[0] == '\x0C' and len(cmd) == 2:
-                    line('cmd.led_mask(dev, 0x%02X)' % ord(cmd[1]))
-                elif cmd == "\x20\x01\x00":
-                    line('cmd.cmd_20(dev)')
-                elif cmd == \
-                        "\x3B\x0C\x22\x00\xC0\x40\x00\x3B\x0E\x22\x00\xC0\x00\x00\x3B\x1A" \
-                        "\x22\x00\xC0\x18\x00":
-                    line('cmd.cmd_3B(dev)')
-                elif cmd == "\x41\x00\x00":
-                    line('cmd.cmd_41(dev)')
-                elif cmd == "\x43\x19\x10\x00\x00":
-                    line('cmd.cmd_43(dev)')
-                elif cmd == "\x4C\x00\x02":
-                    line('cmd.cmd_4C(dev)')
-                elif cmd[0] == "\x57" and len(cmd) == 7:
-                    c57a = cmd[0:3]
-                    cmp_mask(
-                            "\x57\x00\x00" ,
-                            "\xFF\x00\xFF" ,
-                            c57a)
-
-                    c50a = cmd[3:]
-                    cmp_mask(
-                            "\x50\x00\x00\x00" ,
-                            "\xFF\x00\xFF\xFF" ,
-                            c50a)
-                    
-                    line('cmd.cmd_57_50(dev, %s, %s)' % (fmt_terse(c57a[1]), fmt_terse(c50a[1])))
-                elif cmd[0] == "\x50":
-                    # ex: "\x50\x9F\x09\x00\x00"
-                    cmp_mask(
-                            "\x50\x00\x00\x00\x00",
-                            "\xFF\x00\x00\xFF\xFF",
-                            cmd)
-                    line('cmd.cmd_50(dev, %s)' % (fmt_terse(cmd[1:3])))
-                else:
-                    line('bulkWrite(0x02, %s)' % (fmt_terse(cmd, p['packn'][0])))
+            bulk_write(p)
         else:
             raise Exception("Unknown type: %s" % p['type'])
         pi += 1
@@ -433,6 +451,7 @@ if __name__ == "__main__":
         subprocess.check_call(cmd, shell=True)
     else:
         fin = args.fin
-    
-    dump(fin, dumb=args.dumb)
+
+    dumb=args.dumb
+    dump(fin)
 
