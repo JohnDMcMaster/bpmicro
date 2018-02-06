@@ -65,26 +65,15 @@ def pkt_strip(p):
         #raise Exception("Bad prefix")
         line('# WARNING: unexpected prefix')
     '''
-    suffix = ord(p[-1])
-    if suffix != 0x00:
-        if 1:
-            line('# WARNING: unexpected suffix: 0x%02X' % suffix)
-        else:
-            line('"""')
-            line('WARNING: bad suffix')
-            line(fmt_terse(p))
-            line('"""')
-        # saw this once and it looked more or less okay
-        # raise Exception("Bad suffix")
-    size = ord(p[-2])
+    size = (ord(p[-1]) << 8) | ord(p[-2])
     # Exact match
     if size == len(p) - 3:
-        return (p[1:-2], False, pprefix, suffix)
+        return (p[1:-2], False, pprefix)
     # Extra data
     # So far this is always 0 (should verify?)
     elif size < len(p) - 3:
         # TODO: verify 0 padding
-        return (p[1:1 + size], True, pprefix, suffix)
+        return (p[1:1 + size], True, pprefix)
     # Not supposed to happen
     else:
         print fmt_terse(p)
@@ -126,28 +115,39 @@ def nextp():
             return ppi, p
         ppi = ppi + 1
 
-def peek_bulk2(p):
-    global pi
+def bulk2(p_w, p_rs):
+    cmd = binascii.unhexlify(p_w['data'])
 
-    def bulk2():
+    reply_all = ''
+    for p_r in p_rs:
+        reply_full = binascii.unhexlify(p_r['data'])
+        reply, _truncate, pprefix = pkt_strip(reply_full)
+        reply_all += reply
         if pprefix != 0x08:
             pprefix_str = ', prefix=0x%02X' % pprefix
             raise Exception(pprefix_str)
-        pack_str = 'packet W: %s/%s, R: %s/%s' % (
-                p_w['packn'][0], p_w['packn'][1], p_r['packn'][0], p_r['packn'][1])
-        line('buff = cmd.bulk2(dev, %s)' % (fmt_terse(cmd, p_w['packn'][0]),))
-        #line('# Discarded %d / %d bytes => %d bytes' % (len(reply_full) - len(reply), len(reply_full), len(reply)))
-        line('validate_read(%s, buff, "%s")' % (fmt_terse(reply, p_r['packn'][0]), pack_str))
-    
+
+    pack_str = 'packet W: %s/%s, R %d to %s/%s' % (
+            p_w['packn'][0], p_w['packn'][1],
+            len(p_rs),
+            p_r['packn'][0], p_r['packn'][1])
+    line('buff = cmd.bulk2(dev, %s)' % (fmt_terse(cmd, p_w['packn'][0]),))
+    #line('# Discarded %d / %d bytes => %d bytes' % (len(reply_full) - len(reply), len(reply_full), len(reply)))
+    line('validate_read(%s, buff, "%s")' % (fmt_terse(reply_all, p_r['packn'][0]), pack_str))
+
+def peek_bulk2(p):
+    global pi
+
     p_w = p
     pi, p_r = nextp()
+
     cmd = binascii.unhexlify(p_w['data'])
     reply_full = binascii.unhexlify(p_r['data'])
-    if 0:
-        line("'''")
-        line(fmt_terse(reply_full, p['packn'][0]))
-        line("'''")
-    reply, _truncate, pprefix, suffix = pkt_strip(reply_full)
+    reply, _truncate, pprefix = pkt_strip(reply_full)
+    if pprefix != 0x08:
+        pprefix_str = ', prefix=0x%02X' % pprefix
+        raise Exception(pprefix_str)
+
     if cmd == "\x01":
         line('cmd.cmd_01(dev)')
     elif cmd == "\x02":
@@ -163,7 +163,7 @@ def peek_bulk2(p):
             cmp_buff("\x00\x00", reply)
         except CmpFail:
             line('# Bad reply for cmd_08()')
-            bulk2()
+            bulk2(p_w, [p_r])
         else:
             line('cmd.cmd_08(dev, %s)' % (fmt_terse(cmd[3])))
     elif cmd[0] == "\x0C":
@@ -190,7 +190,7 @@ def peek_bulk2(p):
         else:
             #raise Exception("Unexpected read")
             line('# Unexpected SM read')
-            bulk2()
+            bulk2(p_w, [p_r])
     elif cmd == "\x45\x01\x00\x00\x31\x00\x06":
         cmp_buff( \
                 "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF" \
@@ -216,8 +216,14 @@ def peek_bulk2(p):
                 "\xFF\x00\xFF",
                 cmd)
         line('cmd.cmd_57s(dev, %s, %s)' % (fmt_terse(cmd[1]), fmt_terse(reply)))
+    # Unknown response
+    # Do generic bulk read
     else:
-        bulk2()
+        p_rs = [p_r]
+        while peekp()['type'] == 'bulkRead':
+            pi, p_r = nextp()
+            p_rs.append(p_r)
+        bulk2(p_w, p_rs)
 
 def bulk86_next_read(p):
     if p['type'] != 'bulkRead':
@@ -225,7 +231,7 @@ def bulk86_next_read(p):
     if p['endp'] != 0x86:
         raise Exception("Unexpected endpoint")
     reply_full = binascii.unhexlify(p['data'])
-    reply, _truncate, pprefix, _suffix = pkt_strip(reply_full)
+    reply, _truncate, pprefix = pkt_strip(reply_full)
     if pprefix != 0x08:
         pprefix_str = ', prefix=0x%02X' % pprefix
         raise Exception(pprefix_str)
