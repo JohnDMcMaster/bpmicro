@@ -14,7 +14,7 @@ if __name__ == "__main__":
     if args.cycle:
         startup.cycle()
 
-    bp = startup.get(init=False)
+    bp = startup.get()
 
     fw_in = replay(bp.dev, cont=args.cont)
     if args.fout:

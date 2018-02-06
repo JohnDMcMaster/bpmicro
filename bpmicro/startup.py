@@ -127,19 +127,23 @@ def replay(dev):
     buff = controlRead(0xC0, 0xB0, 0x0000, 0x0000, 4096)
     # NOTE:: req max 4096 but got 3
     validate_read("\x00\x00\x00", buff, "packet 55/56")
+
     # Generated from packet 57/58
     buff = bulkRead(0x86, 0x0200)
     # NOTE:: req max 512 but got 4
     validate_read("\x08\x16\x01\x00", buff, "packet 57/58")
+
     # Generated from packet 62/63
     # None (0xB0)
     buff = controlRead(0xC0, 0xB0, 0x0000, 0x0000, 4096)
     # NOTE:: req max 4096 but got 3
     validate_read("\x00\x00\x00", buff, "packet 62/63")
+
     # Generated from packet 64/65
     buff = bulkRead(0x86, 0x0200)
     # NOTE:: req max 512 but got 4
     validate_read("\x08\x16\x01\x00", buff, "packet 64/65")
+
     # Generated from packet 66/67
     buff = bytearray(cmd.cmd_01(dev))
     # Seems to be okay if we always do this although its only sometimes needed
