@@ -38,123 +38,17 @@ def my_cmd_57s(dev):
     # Generated from packet 2103/2104
     # got "\xFF\x3F" on overcurrent
     cmd.cmd_57s(dev, "\x92\x94", "\x0E\x3F")
+
+
+    # Odd pattern
+    # Cycling through bytes or something?
     # Generated from packet 2107/2108
-    cmd.cmd_57s(dev, "\x92\x94", "\x10\x3F")
-
-    # Generated from packet 2111/2112
-    cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
-    # Generated from packet 2115/2116
-    cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
-    # Generated from packet 2119/2120
-    cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
-    # Generated from packet 2123/2124
-    cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
-    # Generated from packet 2127/2128
-    cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
-    # Generated from packet 2131/2132
-    cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
-    # Generated from packet 2135/2136
-    cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
-
-    # Generated from packet 2139/2140
-    cmd.cmd_57s(dev, "\x92\x94", "\x20\x3F")
-
-    # Generated from packet 2143/2144
-    cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
-    # Generated from packet 2147/2148
-    cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
-    # Generated from packet 2151/2152
-    cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
-    # Generated from packet 2155/2156
-    cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
-    # Generated from packet 2159/2160
-    cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
-    # Generated from packet 2163/2164
-    cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
-    # Generated from packet 2167/2168
-    cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
-    # Generated from packet 2171/2172
-    cmd.cmd_57s(dev, "\x92\x94", "\x30\x3F")
-    # Generated from packet 2175/2176
-    cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
-    # Generated from packet 2179/2180
-    cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
-    # Generated from packet 2183/2184
-    cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
-    # Generated from packet 2187/2188
-    cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
-    # Generated from packet 2191/2192
-    cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
-    # Generated from packet 2195/2196
-    cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
-    # Generated from packet 2199/2200
-    cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
-
-    # Generated from packet 2203/2204
-    cmd.cmd_57s(dev, "\x92\x94", "\x40\x3F")
-
-    # Generated from packet 2207/2208
-    cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
-    # Generated from packet 2211/2212
-    cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
-    # Generated from packet 2215/2216
-    cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
-    # Generated from packet 2219/2220
-    cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
-    # Generated from packet 2223/2224
-    cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
-    # Generated from packet 2227/2228
-    cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
-    # Generated from packet 2231/2232
-    cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
-    # Generated from packet 2235/2236
-    cmd.cmd_57s(dev, "\x92\x94", "\x50\x3F")
-    # Generated from packet 2239/2240
-    cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
-    # Generated from packet 2243/2244
-    cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
-    # Generated from packet 2247/2248
-    cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
-    # Generated from packet 2251/2252
-    cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
-    # Generated from packet 2255/2256
-    cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
-    # Generated from packet 2259/2260
-    cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
-    # Generated from packet 2263/2264
-    cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
-    # Generated from packet 2267/2268
-    cmd.cmd_57s(dev, "\x92\x94", "\x60\x3F")
-    # Generated from packet 2271/2272
-    cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
-    # Generated from packet 2275/2276
-    cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
-    # Generated from packet 2279/2280
-    cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
-    # Generated from packet 2283/2284
-    cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
-    # Generated from packet 2287/2288
-    cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
-    # Generated from packet 2291/2292
-    cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
-    # Generated from packet 2295/2296
-    cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
-    # Generated from packet 2299/2300
-    cmd.cmd_57s(dev, "\x92\x94", "\x70\x3F")
-    # Generated from packet 2303/2304
-    cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
-    # Generated from packet 2307/2308
-    cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
-    # Generated from packet 2311/2312
-    cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
-    # Generated from packet 2315/2316
-    cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
-    # Generated from packet 2319/2320
-    cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
-    # Generated from packet 2323/2324
-    cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
+    # ...
     # Generated from packet 2327/2328
-    cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
+    for myresp in xrange(0x10, 0x80, 0x10):
+        cmd.cmd_57s(dev, "\x92\x94", chr(myresp) + "\x3F")
+        for i in xrange(7):
+            cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
 
     # Generated from packet 2331/2332
     cmd.cmd_57s(dev, "\x92\x8D", "\x00\x00")
