@@ -14,31 +14,24 @@ import time
 def my_cmd_57s(dev):
     bulkRead, bulkWrite, controlRead, controlWrite = usb_wraps(dev)
 
-    # Generated from packet 2075/2076
-    ret = cmd.cmd_57s(dev, "\x94", None)
-    if ret != "\x00\x3F":
+    def my_cmd_57s(dev, cmds, exp, msg="cmd_57"):
+        ret = cmd.cmd_57s(dev, cmds, None, msg="cmd_57")
         # Suspected, not confirmed
+        # This might actually be the chip going away as 0x3FFF sounds like a bus read
         if ret == "\xFF\x3F":
-            raise cmd.Overcurrent()
-        else:
-            raise Exception("Confused")
+            raise cmd.BusError()
+        validate_read(exp, ret, msg)
+        return ret
+
+    # Generated from packet 2075/2076
+    my_cmd_57s(dev, "\x94", "\x00\x3F")
 
     # Generated from packet 2079/2080
-    cmd.cmd_57s(dev, "\x92\x94", "\x02\x3F")
-    # Generated from packet 2083/2084
-    cmd.cmd_57s(dev, "\x92\x94", "\x04\x3F")
-    # Generated from packet 2087/2088
-    cmd.cmd_57s(dev, "\x92\x94", "\x06\x3F")
-    # Generated from packet 2091/2092
-    cmd.cmd_57s(dev, "\x92\x94", "\x08\x3F")
-    # Generated from packet 2095/2096
-    cmd.cmd_57s(dev, "\x92\x94", "\x0A\x3F")
-    # Generated from packet 2099/2100
-    cmd.cmd_57s(dev, "\x92\x94", "\x0C\x3F")
+    # ...
     # Generated from packet 2103/2104
     # got "\xFF\x3F" on overcurrent
-    cmd.cmd_57s(dev, "\x92\x94", "\x0E\x3F")
-
+    for myresp in xrange(0x02, 0x10, 0x02):
+        my_cmd_57s(dev, "\x92\x94", chr(myresp) + "\x3F")
 
     # Odd pattern
     # Cycling through bytes or something?
@@ -46,12 +39,12 @@ def my_cmd_57s(dev):
     # ...
     # Generated from packet 2327/2328
     for myresp in xrange(0x10, 0x80, 0x10):
-        cmd.cmd_57s(dev, "\x92\x94", chr(myresp) + "\x3F")
+        my_cmd_57s(dev, "\x92\x94", chr(myresp) + "\x3F")
         for i in xrange(7):
             cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
 
     # Generated from packet 2331/2332
-    cmd.cmd_57s(dev, "\x92\x8D", "\x00\x00")
+    my_cmd_57s(dev, "\x92\x8D", "\x00\x00")
 
 def replay(dev, cont, verbose=False):
     bulkRead, bulkWrite, controlRead, controlWrite = usb_wraps(dev)
@@ -420,6 +413,8 @@ def replay(dev, cont, verbose=False):
     validate_read("\x8E\x00", buff, "packet W: 1983/1984, R 1 to 1985/1986")
     # Generated from packet 1987/1988
     cmd.cmd_02(dev, "\x8F\x00\x30\x78\x09\x00")
+
+    time.sleep(1)
     # Generated from packet 1991/1992
     buff = cmd.bulk2b(dev, 
         "\x04\x00\x05\x00\x06\x00\x07\x00\x08\x00\x09\x04\x0A\x00\x0B\x00" \

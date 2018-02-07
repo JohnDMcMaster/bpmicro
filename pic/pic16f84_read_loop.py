@@ -22,6 +22,9 @@ if __name__ == "__main__":
         print
         try:
             fw_in = replay(bp.dev, cont=args.cont)
+        except cmd.BusError:
+            print 'WARNING: bus error'
+            continue
         except cmd.Overcurrent:
             print 'WARNING: overcurrent'
             continue

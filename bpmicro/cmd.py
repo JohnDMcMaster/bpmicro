@@ -28,6 +28,10 @@ class ContFail(Exception):
 class Overcurrent(Exception):
     pass
 
+# Abnormal device communication
+class BusError(Exception):
+    pass
+
 # prefix: leave to external logic to packetize
 def bulk86(dev, target=None, donef=None, prefix=None):
     bulkRead, _bulkWrite, _controlRead, _controlWrite = usb_wraps(dev)
@@ -586,8 +590,7 @@ def cmd_57_mk(cmd):
 
 def cmd_57s(dev, cmds, exp, msg="cmd_57"):
     out = ''.join([cmd_57_mk(c) for c in cmds])
-    target = len(exp) if exp else None
-    buff = bulk2(dev, out, target=target)
+    buff = bulk2b(dev, out)
     validate_read(exp, buff, msg)
     return buff
 
