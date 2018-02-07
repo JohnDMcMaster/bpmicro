@@ -9,18 +9,19 @@ from bpmicro.bp1410_fw import load_fx2
 import bpmicro.pic16f84.read_fw
 import bpmicro.pic16f84.write_fw
 
+import binascii
 import time
 
 def my_cmd_57s(dev):
     bulkRead, bulkWrite, controlRead, controlWrite = usb_wraps(dev)
 
+    # FIXME: rework this to throw BusError on any mismatch
     def my_cmd_57s(dev, cmds, exp, msg="cmd_57"):
         ret = cmd.cmd_57s(dev, cmds, None, msg="cmd_57")
         # Suspected, not confirmed
         # This might actually be the chip going away as 0x3FFF sounds like a bus read
-        if ret == "\xFF\x3F":
-            raise cmd.BusError()
-        validate_read(exp, ret, msg)
+        if ret != exp:
+            raise cmd.BusError('Expected %s, got %s' % (binascii.hexlify(exp), binascii.hexlify(ret)))
         return ret
 
     # Generated from packet 2075/2076
@@ -41,7 +42,7 @@ def my_cmd_57s(dev):
     for myresp in xrange(0x10, 0x80, 0x10):
         my_cmd_57s(dev, "\x92\x94", chr(myresp) + "\x3F")
         for i in xrange(7):
-            cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
+            my_cmd_57s(dev, "\x92\x94", "\xFF\x3F")
 
     # Generated from packet 2331/2332
     my_cmd_57s(dev, "\x92\x8D", "\x00\x00")
