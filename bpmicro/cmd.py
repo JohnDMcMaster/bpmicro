@@ -25,6 +25,9 @@ class BadPrefix(Exception):
 class ContFail(Exception):
     pass
 
+class Overcurrent(Exception):
+    pass
+
 # prefix: leave to external logic to packetize
 def bulk86(dev, target=None, donef=None, prefix=None):
     bulkRead, _bulkWrite, _controlRead, _controlWrite = usb_wraps(dev)

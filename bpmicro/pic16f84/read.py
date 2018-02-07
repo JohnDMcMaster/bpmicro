@@ -15,7 +15,14 @@ def my_cmd_57s(dev):
     bulkRead, bulkWrite, controlRead, controlWrite = usb_wraps(dev)
 
     # Generated from packet 2075/2076
-    cmd.cmd_57s(dev, "\x94", "\x00\x3F")
+    ret = cmd.cmd_57s(dev, "\x94", None)
+    if ret != "\x00\x3F":
+        # Suspected, not confirmed
+        if ret == "\xFF\x3F":
+            raise cmd.Overcurrent()
+        else:
+            raise Exception("Confused")
+
     # Generated from packet 2079/2080
     cmd.cmd_57s(dev, "\x92\x94", "\x02\x3F")
     # Generated from packet 2083/2084
@@ -29,9 +36,11 @@ def my_cmd_57s(dev):
     # Generated from packet 2099/2100
     cmd.cmd_57s(dev, "\x92\x94", "\x0C\x3F")
     # Generated from packet 2103/2104
+    # got "\xFF\x3F" on overcurrent
     cmd.cmd_57s(dev, "\x92\x94", "\x0E\x3F")
     # Generated from packet 2107/2108
     cmd.cmd_57s(dev, "\x92\x94", "\x10\x3F")
+
     # Generated from packet 2111/2112
     cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
     # Generated from packet 2115/2116
@@ -46,8 +55,10 @@ def my_cmd_57s(dev):
     cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
     # Generated from packet 2135/2136
     cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
+
     # Generated from packet 2139/2140
     cmd.cmd_57s(dev, "\x92\x94", "\x20\x3F")
+
     # Generated from packet 2143/2144
     cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
     # Generated from packet 2147/2148
@@ -78,8 +89,10 @@ def my_cmd_57s(dev):
     cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
     # Generated from packet 2199/2200
     cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
+
     # Generated from packet 2203/2204
     cmd.cmd_57s(dev, "\x92\x94", "\x40\x3F")
+
     # Generated from packet 2207/2208
     cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
     # Generated from packet 2211/2212
@@ -142,10 +155,11 @@ def my_cmd_57s(dev):
     cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
     # Generated from packet 2327/2328
     cmd.cmd_57s(dev, "\x92\x94", "\xFF\x3F")
+
     # Generated from packet 2331/2332
     cmd.cmd_57s(dev, "\x92\x8D", "\x00\x00")
 
-def replay(dev, cont):
+def replay(dev, cont, verbose=False):
     bulkRead, bulkWrite, controlRead, controlWrite = usb_wraps(dev)
 
     # Generated from packet 1273/1274
@@ -163,7 +177,7 @@ def replay(dev, cont):
     validate_read("\x16", buff, "packet 1645/1646")
     # NOTE:: req max 512 but got 4
     # Generated from packet 1647/1648
-    cmd.cmd_01(dev)
+    #cmd.cmd_01(dev)
     # NOTE:: req max 512 but got 136
     # Generated from packet 1651/1652
     buff = cmd.bulk2b(dev, 
@@ -173,38 +187,42 @@ def replay(dev, cont):
     validate_read("\xA4\x06", buff, "packet W: 1651/1652, R 1 to 1653/1654")
     # NOTE:: req max 512 but got 5
     # Generated from packet 1655/1656
-    cmd.cmd_01(dev)
+    #cmd.cmd_01(dev)
     # NOTE:: req max 512 but got 136
     # Generated from packet 1659/1660
-    cmd.sn_read(dev)
-    # NOTE:: req max 512 but got 35
-    # Generated from packet 1663/1664
-    buff = cmd.bulk2b(dev, 
-        "\x14\x38\x25\x00\x00\x04\x00\x90\x32\x90\x00\xA7\x02\x1F\x00\x14" \
-        "\x40\x25\x00\x00\x01\x00\x3C\x36\x0E\x01"
-        )
-    validate_read(
-        "\x14\x00\x54\x41\x38\x34\x56\x4C\x56\x5F\x46\x58\x34\x00\x00\x00" \
-        "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x3E\x2C"
-        , buff, "packet W: 1663/1664, R 1 to 1665/1666")
+    #cmd.sn_read(dev)
+
+    # Technology adapter info
+    if 0:
+        # NOTE:: req max 512 but got 35
+        # Generated from packet 1663/1664
+        buff = cmd.bulk2b(dev, 
+            "\x14\x38\x25\x00\x00\x04\x00\x90\x32\x90\x00\xA7\x02\x1F\x00\x14" \
+            "\x40\x25\x00\x00\x01\x00\x3C\x36\x0E\x01"
+            )
+        validate_read(
+            "\x14\x00\x54\x41\x38\x34\x56\x4C\x56\x5F\x46\x58\x34\x00\x00\x00" \
+            "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x3E\x2C"
+            , buff, "packet W: 1663/1664, R 1 to 1665/1666")
+    
     # NOTE:: req max 512 but got 35
     # Generated from packet 1667/1668
-    cmd.gpio_readi(dev)
+    #cmd.gpio_readi(dev)
     # NOTE:: req max 512 but got 5
     # Generated from packet 1671/1672
-    cmd.gpio_readi(dev)
+    #cmd.gpio_readi(dev)
     # NOTE:: req max 512 but got 5
     # Generated from packet 1675/1676
-    cmd.sm_info22(dev)
+    #cmd.sm_info22(dev)
     # NOTE:: req max 512 but got 7
     # Generated from packet 1679/1680
-    cmd.sm_info24(dev)
+    #cmd.sm_info24(dev)
     # NOTE:: req max 512 but got 7
     # Generated from packet 1683/1684
-    cmd.sm_read(dev)
+    #cmd.sm_read(dev)
     # NOTE:: req max 512 but got 35
     # Generated from packet 1687/1688
-    cmd.cmd_01(dev)
+    #cmd.cmd_01(dev)
     # NOTE:: req max 512 but got 136
     # Generated from packet 1691/1692
     bulkWrite(0x02, "\x43\x19\x08\x00\x00")
@@ -216,10 +234,10 @@ def replay(dev, cont):
     cmd.cmd_10(dev)
     # NOTE:: req max 512 but got 9
     # Generated from packet 1701/1702
-    cmd.sm_read(dev)
+    #cmd.sm_read(dev)
     # NOTE:: req max 512 but got 35
     # Generated from packet 1705/1706
-    cmd.sm_insert(dev)
+    #cmd.sm_insert(dev)
     # NOTE:: req max 512 but got 35
     # Generated from packet 1709/1710
     cmd.cmd_45(dev)
@@ -228,31 +246,31 @@ def replay(dev, cont):
     cmd.cmd_49(dev)
     # NOTE:: req max 512 but got 5
     # Generated from packet 1717/1718
-    cmd.gpio_readi(dev)
+    #cmd.gpio_readi(dev)
     # NOTE:: req max 512 but got 5
     # Generated from packet 1721/1722
-    cmd.gpio_readi(dev)
+    #cmd.gpio_readi(dev)
     # NOTE:: req max 512 but got 5
     # Generated from packet 1725/1726
-    cmd.sm_info22(dev)
+    #cmd.sm_info22(dev)
     # NOTE:: req max 512 but got 7
     # Generated from packet 1729/1730
-    cmd.sm_info24(dev)
+    #cmd.sm_info24(dev)
     # NOTE:: req max 512 but got 7
     # Generated from packet 1733/1734
-    cmd.sm_read(dev)
+    #cmd.sm_read(dev)
     # NOTE:: req max 512 but got 35
     # Generated from packet 1737/1738
     cmd.cmd_49(dev)
     # NOTE:: req max 512 but got 5
     # Generated from packet 1741/1742
-    cmd.sm_read(dev)
+    #cmd.sm_read(dev)
     # NOTE:: req max 512 but got 35
     # Generated from packet 1745/1746
-    cmd.sm_insert(dev)
+    #cmd.sm_insert(dev)
     # NOTE:: req max 512 but got 35
     # Generated from packet 1749/1750
-    cmd.sm_info10(dev)
+    #cmd.sm_info10(dev)
     # NOTE:: req max 512 but got 11
     # Generated from packet 1753/1754
     cmd.cmd_3B(dev)
@@ -325,15 +343,15 @@ def replay(dev, cont):
         "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x3E\x2C"
         , buff, "packet W: 1803/1804, R 1 to 1805/1806")
     # Generated from packet 1807/1808
-    cmd.gpio_readi(dev)
+    #cmd.gpio_readi(dev)
     # Generated from packet 1811/1812
-    cmd.gpio_readi(dev)
+    #cmd.gpio_readi(dev)
     # Generated from packet 1815/1816
-    cmd.sm_info22(dev)
+    #cmd.sm_info22(dev)
     # Generated from packet 1819/1820
-    cmd.sm_info24(dev)
+    #cmd.sm_info24(dev)
     # Generated from packet 1823/1824
-    cmd.sm_read(dev)
+    #cmd.sm_read(dev)
     # Generated from packet 1827/1828
     buff = cmd.bulk2b(dev, "\x48\x00\x10\x82\x02")
     validate_read("\x82\x00\x10\x01\x09\x00", buff, "packet W: 1827/1828, R 1 to 1829/1830")
@@ -385,11 +403,13 @@ def replay(dev, cont):
         tstart = time.time()
         buff = cmd.cmd_57s(dev, "\x85", None,  "cmd_57")
         tend = time.time()
-        print 'Continuity test took %0.3f sec' % (tend - tstart,)
-        util.hexdump(buff, label='Continuity', indent='  ')
+        if verbose:
+            print 'Continuity test took %0.3f sec' % (tend - tstart,)
+            util.hexdump(buff, label='Continuity', indent='  ')
         # Chip inserted
         if buff == "\x01":
-            print 'Continuity OK'
+            if verbose:
+                print 'Continuity OK'
         # Chip removed
         elif buff == ("\x02\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00" \
                     "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"):
@@ -512,7 +532,7 @@ def replay(dev, cont):
         "\x57\x8E\x00"
         )
     retbuff = buff
-    validate_read(bpmicro.pic16f84.read_fw.p2001, buff, "packet W: 1991/1992, R 5 to 2001/2002")
+    #validate_read(bpmicro.pic16f84.read_fw.p2001, buff, "packet W: 1991/1992, R 5 to 2001/2002")
 
     # Generated from packet 2003/2004
     cmd.cmd_50(dev, "\x5E\x00")
@@ -615,22 +635,22 @@ def replay(dev, cont):
     # Generated from packet 2359/2360
     cmd.led_mask(dev, "pass")
     # Generated from packet 2363/2364
-    cmd.gpio_readi(dev)
+    #cmd.gpio_readi(dev)
     # Generated from packet 2367/2368
-    cmd.gpio_readi(dev)
+    #cmd.gpio_readi(dev)
     # Generated from packet 2371/2372
-    cmd.sm_info22(dev)
+    #cmd.sm_info22(dev)
     # Generated from packet 2375/2376
-    cmd.sm_info24(dev)
+    #cmd.sm_info24(dev)
     # Generated from packet 2379/2380
-    cmd.sm_read(dev)
+    #cmd.sm_read(dev)
     # Generated from packet 2383/2384
     cmd.cmd_49(dev)
     # Generated from packet 2387/2388
-    cmd.sm_read(dev)
+    #cmd.sm_read(dev)
     # Generated from packet 2391/2392
-    cmd.sm_insert(dev)
+    #cmd.sm_insert(dev)
     # Generated from packet 2395/2396
-    cmd.sm_info10(dev)
+    #cmd.sm_info10(dev)
 
     return retbuff
