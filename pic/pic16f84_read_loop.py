@@ -21,12 +21,26 @@ if __name__ == "__main__":
         print
         print
         try:
-            fw_in = replay(bp.dev, cont=args.cont)
+            (code, eeprom, config) = replay(bp.dev, cont=args.cont)
         except cmd.BusError:
             print 'WARNING: bus error'
             continue
         except cmd.Overcurrent:
             print 'WARNING: overcurrent'
             continue
-        hexdump(fw_in, indent='  ', label='Read data')
-        print 'Bytes: %d 0x%04X' % (len(fw_in), len(fw_in))
+        except cmd.ContFail:
+            print 'WARNING: continuity fail'
+            continue
+
+        print
+        hexdump(code, indent='  ', label='Code')
+
+        print
+        hexdump(eeprom, indent='  ', label='EEPROM')
+
+        print
+        print 'Fuses'
+        for i in xrange(0, 4):
+            print '  user_id%d:  0x%04X' % (i, config['user_id%d' % i])
+        #print '  conf_word: 0x%04X' % (config['conf_word'])
+        print '  secure: %s' % (config['secure'])

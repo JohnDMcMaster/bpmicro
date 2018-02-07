@@ -10,45 +10,33 @@ import bpmicro.pic16f84.read_fw
 import bpmicro.pic16f84.write_fw
 
 import binascii
+import struct
 import time
 
 def my_cmd_57s(dev):
-    bulkRead, bulkWrite, controlRead, controlWrite = usb_wraps(dev)
-
-    # FIXME: rework this to throw BusError on any mismatch
-    def my_cmd_57s(dev, cmds, exp, msg="cmd_57"):
-        ret = cmd.cmd_57s(dev, cmds, None, msg="cmd_57")
-        # Suspected, not confirmed
-        # This might actually be the chip going away as 0x3FFF sounds like a bus read
-        if ret != exp:
-            raise cmd.BusError('Expected %s, got %s' % (binascii.hexlify(exp), binascii.hexlify(ret)))
-        return ret
-
-    # Generated from packet 2075/2076
-    my_cmd_57s(dev, "\x94", "\x00\x3F")
-
-    # Generated from packet 2079/2080
-    # ...
-    # Generated from packet 2103/2104
-    # got "\xFF\x3F" on overcurrent
-    for myresp in xrange(0x02, 0x10, 0x02):
-        my_cmd_57s(dev, "\x92\x94", chr(myresp) + "\x3F")
-
-    # Odd pattern
-    # Cycling through bytes or something?
-    # Generated from packet 2107/2108
-    # ...
-    # Generated from packet 2327/2328
-    for myresp in xrange(0x10, 0x80, 0x10):
-        my_cmd_57s(dev, "\x92\x94", chr(myresp) + "\x3F")
-        for i in xrange(7):
-            my_cmd_57s(dev, "\x92\x94", "\xFF\x3F")
+    ret = bytearray()
+    for dati in xrange(0x40):
+        if dati == 0:
+            # Generated from packet 2075/2076
+            this = cmd.cmd_57s(dev, "\x94", None)
+        else:
+            # Generated from packet 2079/2080
+            # ...
+            # Generated from packet 2327/2328
+            this = cmd.cmd_57s(dev, "\x92\x94", None)
+        # Convert little to big endian?
+        # no the data buff will be anyway
+        #ret += this[1] + this[0]
+        ret += this
 
     # Generated from packet 2331/2332
-    my_cmd_57s(dev, "\x92\x8D", "\x00\x00")
+    cmd.cmd_57s(dev, "\x92\x8D", "\x00\x00")
+
+    return ret
 
 def replay(dev, cont, verbose=False):
     bulkRead, bulkWrite, controlRead, controlWrite = usb_wraps(dev)
+    config = {}
 
     # Generated from packet 1273/1274
     # Unexpected SM read
@@ -392,9 +380,17 @@ def replay(dev, cont, verbose=False):
     validate_read("\x8C\x00", buff, "packet W: 1951/1952, R 1 to 1953/1954")
     # Generated from packet 1955/1956
     cmd.cmd_02(dev, "\x8D\x00\x10\x71\x09\x00")
+
+    # XXX
+    # unprotected: \x00\x00
+    # protected: \x01\x00
     # Generated from packet 1959/1960
     buff = cmd.bulk2b(dev, "\x08\x01\x57\x8C\x00")
-    validate_read("\x00\x00", buff, "packet W: 1959/1960, R 1 to 1961/1962")
+    #validate_read("\x00\x00", buff, "packet W: 1959/1960, R 1 to 1961/1962")
+    util.hexdump(buff, label='packet 1959/1960', indent='  ')
+    #print binascii.hexlify(buff)
+    config['secure'] = buff != '\x00\x00'
+
     # Generated from packet 1963/1964
     cmd.cmd_50(dev, "\xCE\x03")
     # Generated from packet 1965/1966
@@ -415,13 +411,12 @@ def replay(dev, cont, verbose=False):
     # Generated from packet 1987/1988
     cmd.cmd_02(dev, "\x8F\x00\x30\x78\x09\x00")
 
-    time.sleep(1)
     # Generated from packet 1991/1992
     buff = cmd.bulk2b(dev, 
         "\x04\x00\x05\x00\x06\x00\x07\x00\x08\x00\x09\x04\x0A\x00\x0B\x00" \
         "\x57\x8E\x00"
         )
-    retbuff = buff
+    code = buff
     #validate_read(bpmicro.pic16f84.read_fw.p2001, buff, "packet W: 1991/1992, R 5 to 2001/2002")
 
     # Generated from packet 2003/2004
@@ -467,8 +462,23 @@ def replay(dev, cont, verbose=False):
     validate_read("\x91\x00", buff, "packet W: 2033/2034, R 1 to 2035/2036")
     # Generated from packet 2037/2038
     cmd.cmd_02(dev, "\x92\x00\x90\x7F\x09\x00")
+
+    # FIXME: which is this?
+    # Names from minipro
+    #fuses = {'conf_word': None}
+    # 4 ID words?
     # Generated from packet 2041/2042
-    cmd.cmd_57s(dev, "\x91", "\xFF\x3F\xFF\x3F\xFF\x3F\xFF\x3F\x03\x00\x01\x00\x01\x00")
+    # "\xFF\x3F \xFF\x3F \xFF\x3F \xFF\x3F \x03\x00 \x01\x00 \x01\x00"
+    buff = cmd.cmd_57s(dev, "\x91", None)
+    def fusepack(buff, i):
+        return struct.unpack('<H', buff[2*i:2*i+2])[0]
+    for i in xrange(0, 4):
+        config['user_id%d' % i] = fusepack(buff, i)
+    # FIXME: confirm
+    config['conf_word'] = fusepack(buff, 4)
+    #print binascii.hexlify(buff)
+
+
     # Generated from packet 2045/2046
     cmd.cmd_50(dev, "\x89\x00")
     # Generated from packet 2047/2048
@@ -501,7 +511,7 @@ def replay(dev, cont, verbose=False):
     # Generated from packet 2071/2072
     cmd.cmd_02(dev, "\x95\x00\xB0\x82\x09\x00")
 
-    my_cmd_57s(dev)
+    eeprom = my_cmd_57s(dev)
 
     # Generated from packet 2335/2336
     cmd.cmd_50(dev, "\x0D\x00")
@@ -543,4 +553,4 @@ def replay(dev, cont, verbose=False):
     # Generated from packet 2395/2396
     #cmd.sm_info10(dev)
 
-    return retbuff
+    return (code, eeprom, config)

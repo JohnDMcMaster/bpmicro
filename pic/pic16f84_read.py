@@ -16,12 +16,22 @@ if __name__ == "__main__":
 
     bp = startup.get()
 
-    fw_in = replay(bp.dev, cont=args.cont)
+    (code, eeprom, config) = replay(bp.dev, cont=args.cont)
     if args.fout:
         print 'Writing to %s' % args.fout
-        open(args.fout, 'w').write(fw_in)
+        open(args.fout, 'w').write(code)
     else:
-        hexdump(fw_in, indent='  ', label='Read data')
-    print 'Bytes: %d 0x%04X' % (len(fw_in), len(fw_in))
+        print
+        hexdump(code, indent='  ', label='Code')
+
+        print
+        hexdump(eeprom, indent='  ', label='EEPROM')
+
+        print
+        print 'Fuses'
+        for i in xrange(0, 4):
+            print '  user_id%d:  0x%04X' % (i, config['user_id%d' % i])
+        #print '  conf_word: 0x%04X' % (config['conf_word'])
+        print '  secure: %s' % (config['secure'])
 
     print 'Complete'

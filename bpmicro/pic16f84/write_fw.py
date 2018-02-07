@@ -1,4 +1,5 @@
 # mcmaster@phantom:~/doc/ext/uvscada/bpm$ python scrape.py pic16f84_pcap/08_prog_con-y_erase-y_blank-n_prog-y_verify-y_secure-n.json  >tmp.py
+# more added later
 
 p651 = \
         "\xBB\x00\x00\x00\x00\xC1\xE3\x02\x53\x5B\xC7\x83\x74\x46\x00\x00" \
