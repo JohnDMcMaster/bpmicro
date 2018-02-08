@@ -390,7 +390,7 @@ def dev_read(dev, cont=False, verbose=False):
     # Generated from packet 1959/1960
     buff = cmd.bulk2b(dev, "\x08\x01\x57\x8C\x00")
     #validate_read("\x00\x00", buff, "packet W: 1959/1960, R 1 to 1961/1962")
-    util.hexdump(buff, label='packet 1959/1960', indent='  ')
+    #util.hexdump(buff, label='packet 1959/1960', indent='  ')
     #print binascii.hexlify(buff)
     config['secure'] = buff != '\x00\x00'
 
