@@ -88,9 +88,9 @@ def main():
     add_bool_arg(parser, '--dir', default=None, help='Force input/output directory') 
     parser.add_argument('operation', help='Operation: read, program, erase, protect, list_device, nop') 
     parser.add_argument('device', nargs='?', help='Device to use') 
-    parser.add_argument('code', nargs='?', help='Read/write input/output file or directory') 
-    parser.add_argument('data', nargs='?', help='Read/write input/output file or directory') 
-    parser.add_argument('config', nargs='?', help='Read/write input/output file or directory') 
+    parser.add_argument('code', nargs='?', help='Read/write input/output file or directory: primary data such as EPROM or flash') 
+    parser.add_argument('data', nargs='?', help='Read/write input/output file: secondary data such as EEPROM') 
+    parser.add_argument('config', nargs='?', help='Read/write input/output file or directory: additional configuration') 
     args = parser.parse_args()
 
     run(args.operation, args.device,
