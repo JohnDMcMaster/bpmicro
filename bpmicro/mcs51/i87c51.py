@@ -29,7 +29,7 @@ def fw_read(dev, target=4096):
     buff = bulk2(dev, "\x08\x00\x57\x8F\x00", target=target)
     return buff
 
-def dev_read(dev, cont):
+def dev_read(dev, cont, verbose=False):
     read_replay1(dev, cont)
     return read_replay2(dev, cont)
 
@@ -200,7 +200,7 @@ def read_replay1(dev, cont=True):
     bulkWrite(0x02, cmd_20_mk() + cmd_50_mk("\x7D\x02"))
     
     # Generated from packet 201/202
-    buff = bulk2(dev, read_fw.p201, target=0x02)
+    buff = bulk2(dev, i87c51_fw.p201, target=0x02)
     
     validate_read("\x82\x00", buff, "packet W: 201/202, R: 203/204")
 
@@ -231,7 +231,7 @@ def read_replay1(dev, cont=True):
     cmd_57_50(dev, "\x83", "\x18\x3A")
     # p221.bin: DOS executable (COM)
     # Generated from packet 221/222
-    buff = bulk2(dev, read_fw.p221, target=0x02)
+    buff = bulk2(dev, i87c51_fw.p221, target=0x02)
     
     validate_read("\x84\x00", buff, "packet W: 221/222, R: 223/224")
 
@@ -250,7 +250,7 @@ def read_replay1(dev, cont=True):
     # Generated from packet 231/232
     cmd_50(dev, "\xDE\x03")
     # Generated from packet 233/234
-    buff = bulk2(dev, read_fw.p233, target=0x02)
+    buff = bulk2(dev, i87c51_fw.p233, target=0x02)
     
     validate_read("\x85\x00", buff, "packet W: 233/234, R: 235/236")
 
@@ -307,7 +307,7 @@ def read_replay1(dev, cont=True):
         "\x00\x50\x71\x09\x00\x00")
 
     # Generated from packet 257/258
-    buff = bulk2(dev, read_fw.p257, target=0x02)
+    buff = bulk2(dev, i87c51_fw.p257, target=0x02)
     
     validate_read("\x87\x00", buff, "packet W: 257/258, R: 259/260")
 
@@ -335,7 +335,7 @@ def read_replay1(dev, cont=True):
     # Generated from packet 279/280
     cmd_57_50(dev, "\x88", "\x32\x07")
     # Generated from packet 281/282
-    buff = bulk2(dev, read_fw.p281, target=0x02)
+    buff = bulk2(dev, i87c51_fw.p281, target=0x02)
     
     validate_read("\x89\x00", buff, "packet W: 281/282, R: 283/284")
 
@@ -349,7 +349,7 @@ def read_replay1(dev, cont=True):
     # Generated from packet 293/294
     cmd_50(dev, "\x3D\x03")
     # Generated from packet 295/296
-    buff = bulk2(dev, read_fw.p295, target=0x02)
+    buff = bulk2(dev, i87c51_fw.p295, target=0x02)
     
     validate_read("\x8A\x00", buff, "packet W: 295/296, R: 297/298")
 
@@ -387,7 +387,7 @@ def read_replay1(dev, cont=True):
     # Generated from packet 321/322
     cmd_50(dev, "\xF8\x04")
     # Generated from packet 323/324
-    buff = bulk2(dev, read_fw.p323, target=0x02)
+    buff = bulk2(dev, i87c51_fw.p323, target=0x02)
     
     validate_read("\x8C\x00", buff, "packet W: 323/324, R: 325/326")
 
@@ -418,7 +418,7 @@ def read_replay1(dev, cont=True):
     # Generated from packet 349/350
     cmd_50(dev, "\xFA\x01")
     # Generated from packet 351/352
-    buff = bulk2(dev, read_fw.p351, target=0x02)
+    buff = bulk2(dev, i87c51_fw.p351, target=0x02)
     validate_read("\x8E\x00", buff, "packet W: 351/352, R: 353/354")
 
     # Generated from packet 355/356
@@ -438,7 +438,7 @@ def read_replay2(dev, cont):
     # Generated from packet 371/372
     cmd_50(dev, "\xDD\x05")
     # Generated from packet 373/374
-    buff = bulk2(dev, read_fw.p373, target=0x02)
+    buff = bulk2(dev, i87c51_fw.p373, target=0x02)
     
     validate_read("\x8F\x00", buff, "packet W: 373/374, R: 375/376")
 
@@ -783,7 +783,8 @@ def dev_write(dev, devcfg, cont=True, verbose=False, blank=True):
 
 
 class I87C51(bpmicro.device.Device):
-    def __init__(self, dev):
+    def __init__(self, dev, verbose=False):
+        self.verbose = verbose
         self.dev = dev
 
     def read(self, opts):

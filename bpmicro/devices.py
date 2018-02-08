@@ -6,9 +6,9 @@ class_s2c = {
     'pic16f84': pic16f84.PIC16F84,
     }
 
-def get(bp, device):
+def get(bp, device, verbose=False):
     try:
         c = class_s2c[device]
     except KeyError:
         raise Exception("Unsupported device %s" % device)
-    return c(bp.dev)
+    return c(bp.dev, verbose=verbose)

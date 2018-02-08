@@ -556,7 +556,8 @@ def dev_read(dev, cont=False, verbose=False):
     return {'code': code, 'data': eeprom, 'config': config}
 
 class PIC16F84(bpmicro.device.Device):
-    def __init__(self, dev):
+    def __init__(self, dev, verbose=False):
+        self.verbose = verbose
         self.dev = dev
 
     def read(self, opts):
