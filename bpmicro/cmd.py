@@ -32,6 +32,9 @@ class Overcurrent(Exception):
 class BusError(Exception):
     pass
 
+class Unsupported(Exception):
+    pass
+
 # prefix: leave to external logic to packetize
 def bulk86(dev, target=None, donef=None, prefix=None):
     bulkRead, _bulkWrite, _controlRead, _controlWrite = usb_wraps(dev)
@@ -288,15 +291,16 @@ def periph_dump(dev):
 def sm_is_inserted(gpio):
     return not bool(gpio & gpio_i2s['smn'])
 
-def sm_insert(dev):
+def sm_insert(dev, verbose=True):
     buff = sm_r(dev, 0x10, 0x1F)
     #hexdump(buff, label="sm_insert", indent='  ')
     SM2_FMT = '<HHHH24s'
     SM2 = namedtuple('sm', ('ins_all', 'unk1', 'ins_last', 'unk2', 'res'))
     sm = SM2(*struct.unpack(SM2_FMT, buff))
-    # Auto increments during some operation
-    print 'SM insertions (all): %d' % sm.ins_all
-    print 'SM insertions (since last): %d' % sm.ins_last
+    if verbose:
+        # Auto increments during some operation
+        print 'SM insertions (all): %d' % sm.ins_all
+        print 'SM insertions (since last): %d' % sm.ins_last
 
     return sm
 

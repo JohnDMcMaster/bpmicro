@@ -6,8 +6,8 @@ from bpmicro import util
 from bpmicro.usb import validate_read
 from bpmicro.usb import usb_wraps
 from bpmicro.bp1410_fw import load_fx2
-import bpmicro.pic16f84.read_fw
-import bpmicro.pic16f84.write_fw
+import pic16f84_fw
+import bpmicro.device
 
 import binascii
 import struct
@@ -34,7 +34,7 @@ def my_cmd_57s(dev):
 
     return ret
 
-def replay(dev, cont, verbose=False):
+def dev_read(dev, cont=False, verbose=False):
     bulkRead, bulkWrite, controlRead, controlWrite = usb_wraps(dev)
     config = {}
 
@@ -234,7 +234,7 @@ def replay(dev, cont, verbose=False):
     # Generated from packet 1831/1832
     bulkWrite(0x02, "\x20\x01\x00\x50\x7D\x02\x00\x00")
     # Generated from packet 1833/1834
-    buff = cmd.bulk2b(dev, bpmicro.pic16f84.write_fw.p651)
+    buff = cmd.bulk2b(dev, pic16f84_fw.p651)
     validate_read("\x82\x00", buff, "packet W: 1833/1834, R 1 to 1835/1836")
     # Generated from packet 1837/1838
     cmd.cmd_02(dev, "\x83\x00\x90\x03\x09\x00")
@@ -251,7 +251,7 @@ def replay(dev, cont, verbose=False):
     # Generated from packet 1851/1852
     bulkWrite(0x02, "\x57\x83\x00\x50\x18\x3A\x00\x00")
     # Generated from packet 1853/1854
-    buff = cmd.bulk2b(dev, bpmicro.pic16f84.read_fw.p533)
+    buff = cmd.bulk2b(dev, pic16f84_fw.p533)
     validate_read("\x84\x00", buff, "packet W: 1853/1854, R 1 to 1855/1856")
     # Generated from packet 1857/1858
     cmd.cmd_02(dev, "\x85\x00\xD0\x3D\x09\x00")
@@ -265,7 +265,7 @@ def replay(dev, cont, verbose=False):
     # Generated from packet 1863/1864
     cmd.cmd_50(dev, "\xDE\x03")
     # Generated from packet 1865/1866
-    buff = cmd.bulk2b(dev, bpmicro.pic16f84.read_fw.p555)
+    buff = cmd.bulk2b(dev, pic16f84_fw.p555)
     validate_read("\x85\x00", buff, "packet W: 1865/1866, R 1 to 1867/1868")
     # Generated from packet 1869/1870
     cmd.cmd_02(dev, "\x86\x00\xB0\x41\x09\x00")
@@ -299,7 +299,7 @@ def replay(dev, cont, verbose=False):
     # Generated from packet 1877/1878
     cmd.cmd_50(dev, "\x71\x1B")
     # Generated from packet 1879/1880
-    buff = cmd.bulk2b(dev, bpmicro.pic16f84.read_fw.p591)
+    buff = cmd.bulk2b(dev, pic16f84_fw.p591)
     validate_read("\x86\x00", buff, "packet W: 1879/1880, R 1 to 1881/1882")
     # Generated from packet 1883/1884
     cmd.cmd_02(dev, "\x87\x00\x30\x5D\x09\x00")
@@ -338,7 +338,7 @@ def replay(dev, cont, verbose=False):
         "\x00\x50\x71\x09\x00\x00"
         )
     # Generated from packet 1903/1904
-    buff = cmd.bulk2b(dev, bpmicro.pic16f84.read_fw.p615)
+    buff = cmd.bulk2b(dev, pic16f84_fw.p615)
     validate_read("\x88\x00", buff, "packet W: 1903/1904, R 1 to 1905/1906")
     # Generated from packet 1907/1908
     cmd.cmd_02(dev, "\x89\x00\xF0\x66\x09\x00")
@@ -367,7 +367,7 @@ def replay(dev, cont, verbose=False):
     # Generated from packet 1935/1936
     bulkWrite(0x02, "\x57\x8A\x00\x50\xD1\x06\x00\x00")
     # Generated from packet 1937/1938
-    buff = cmd.bulk2b(dev, bpmicro.pic16f84.write_fw.p891)
+    buff = cmd.bulk2b(dev, pic16f84_fw.p891)
     validate_read("\x8B\x00", buff, "packet W: 1937/1938, R 1 to 1939/1940")
     # Generated from packet 1941/1942
     cmd.cmd_02(dev, "\x8C\x00\x10\x6E\x09\x00")
@@ -376,7 +376,7 @@ def replay(dev, cont, verbose=False):
     # Generated from packet 1949/1950
     cmd.cmd_50(dev, "\xF2\x02")
     # Generated from packet 1951/1952
-    buff = cmd.bulk2b(dev, bpmicro.pic16f84.read_fw.p663)
+    buff = cmd.bulk2b(dev, pic16f84_fw.p663)
     validate_read("\x8C\x00", buff, "packet W: 1951/1952, R 1 to 1953/1954")
     # Generated from packet 1955/1956
     cmd.cmd_02(dev, "\x8D\x00\x10\x71\x09\x00")
@@ -394,7 +394,7 @@ def replay(dev, cont, verbose=False):
     # Generated from packet 1963/1964
     cmd.cmd_50(dev, "\xCE\x03")
     # Generated from packet 1965/1966
-    buff = cmd.bulk2b(dev, bpmicro.pic16f84.write_fw.p919)
+    buff = cmd.bulk2b(dev, pic16f84_fw.p919)
     validate_read("\x8D\x00", buff, "packet W: 1965/1966, R 1 to 1967/1968")
     # Generated from packet 1969/1970
     cmd.cmd_02(dev, "\x8E\x00\xE0\x74\x09\x00")
@@ -406,7 +406,7 @@ def replay(dev, cont, verbose=False):
     # Generated from packet 1981/1982
     cmd.cmd_50(dev, "\x45\x03")
     # Generated from packet 1983/1984
-    buff = cmd.bulk2b(dev, bpmicro.pic16f84.read_fw.p697)
+    buff = cmd.bulk2b(dev, pic16f84_fw.p697)
     validate_read("\x8E\x00", buff, "packet W: 1983/1984, R 1 to 1985/1986")
     # Generated from packet 1987/1988
     cmd.cmd_02(dev, "\x8F\x00\x30\x78\x09\x00")
@@ -417,7 +417,7 @@ def replay(dev, cont, verbose=False):
         "\x57\x8E\x00"
         )
     code = buff
-    #validate_read(bpmicro.pic16f84.read_fw.p2001, buff, "packet W: 1991/1992, R 5 to 2001/2002")
+    #validate_read(pic16f84_fw.p2001, buff, "packet W: 1991/1992, R 5 to 2001/2002")
 
     # Generated from packet 2003/2004
     cmd.cmd_50(dev, "\x5E\x00")
@@ -438,7 +438,7 @@ def replay(dev, cont, verbose=False):
     # Generated from packet 2017/2018
     cmd.cmd_50(dev, "\x58\x06")
     # Generated from packet 2019/2020
-    buff = cmd.bulk2b(dev, bpmicro.pic16f84.read_fw.p759)
+    buff = cmd.bulk2b(dev, pic16f84_fw.p759)
     validate_read("\x90\x00", buff, "packet W: 2019/2020, R 1 to 2021/2022")
     # Generated from packet 2023/2024
     cmd.cmd_02(dev, "\x91\x00\xF0\x7E\x09\x00")
@@ -497,16 +497,16 @@ def replay(dev, cont, verbose=False):
     # Generated from packet 2051/2052
     cmd.cmd_02(dev, "\x93\x00\x20\x80\x09\x00")
     # Generated from packet 2055/2056
-    bulkWrite(0x02, bpmicro.pic16f84.read_fw.p795)
+    bulkWrite(0x02, pic16f84_fw.p795)
     # Generated from packet 2057/2058
-    buff = cmd.bulk2b(dev, bpmicro.pic16f84.read_fw.p797)
+    buff = cmd.bulk2b(dev, pic16f84_fw.p797)
     validate_read("\x93\x00", buff, "packet W: 2057/2058, R 1 to 2059/2060")
     # Generated from packet 2061/2062
     cmd.cmd_02(dev, "\x94\x00\xA0\x81\x09\x00")
     # Generated from packet 2065/2066
     bulkWrite(0x02, "\x57\x93\x00\x50\x07\x01\x00\x00")
     # Generated from packet 2067/2068
-    buff = cmd.bulk2b(dev, bpmicro.pic16f84.read_fw.p807)
+    buff = cmd.bulk2b(dev, pic16f84_fw.p807)
     validate_read("\x94\x00", buff, "packet W: 2067/2068, R 1 to 2069/2070")
     # Generated from packet 2071/2072
     cmd.cmd_02(dev, "\x95\x00\xB0\x82\x09\x00")
@@ -553,4 +553,18 @@ def replay(dev, cont, verbose=False):
     # Generated from packet 2395/2396
     #cmd.sm_info10(dev)
 
-    return (code, eeprom, config)
+    return {'code': code, 'data': eeprom, 'config': config}
+
+class PIC16F84(bpmicro.device.Device):
+    def __init__(self, dev):
+        self.dev = dev
+
+    def read(self, opts):
+        return dev_read(dev=self.dev, cont=opts.get('cont', True), verbose=opts.get('verbose', False))
+
+    @staticmethod
+    def print_config(config):
+        for i in xrange(0, 4):
+            print '  user_id%d:  0x%04X' % (i, config['user_id%d' % i])
+        #print '  conf_word: 0x%04X' % (config['conf_word'])
+        print '  secure: %s' % (config['secure'])
