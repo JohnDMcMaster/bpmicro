@@ -1,8 +1,9 @@
 class BP1410(object):
-    def __init__(self, dev, usbcontext):
+    def __init__(self, dev, usbcontext, verbose=False):
         self.dev = dev
         self.usbcontext = usbcontext
         self.timeout = 1000
+        self.verbose = verbose
 
     def bulkRead(self, endpoint, length, timeout=None):
         timeout = timeout if timeout is not None else self.timeout

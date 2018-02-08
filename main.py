@@ -12,8 +12,9 @@ def run(operation, device,
     bp = None
     device = None
     if operation != 'list_device':
-        bp = startup.get()
-        device = devices.get(bp, device_str)
+        bp = startup.get(verbose=verbose)
+        if operation != 'nop':
+            device = devices.get(bp, device_str, verbose=verbose)
 
     opts = {
         'cont': cont,
@@ -26,6 +27,8 @@ def run(operation, device,
         print 'Devices:'
         for device in sorted(devices.class_s2c.keys()):
             print device
+    elif operation == 'nop':
+        pass
     elif operation == 'program':
         devcfg = {}
         devcfg['code'] = open(code_fn, 'r').read()
@@ -83,7 +86,7 @@ def main():
     add_bool_arg(parser, '--verify', default=True, help='Read back after write (write only)') 
     add_bool_arg(parser, '--verbose', default=True, help='More verbose output') 
     add_bool_arg(parser, '--dir', default=None, help='Force input/output directory') 
-    parser.add_argument('operation', help='Operation: read, program, erase, protect, list_device') 
+    parser.add_argument('operation', help='Operation: read, program, erase, protect, list_device, nop') 
     parser.add_argument('device', nargs='?', help='Device to use') 
     parser.add_argument('code', nargs='?', help='Read/write input/output file or directory') 
     parser.add_argument('data', nargs='?', help='Read/write input/output file or directory') 

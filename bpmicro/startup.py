@@ -105,7 +105,7 @@ def boot_warm(dev):
     # Generated from packet 74/75
     #cmd.cmd_01(dev)
 
-def replay(dev):
+def replay(dev, verbose=False):
     bulkRead, bulkWrite, controlRead, controlWrite = usb_wraps(dev)
 
     '''
@@ -151,14 +151,16 @@ def replay(dev):
     # All of these are the same except for the state byte
     # maybe varies depending if SM installed
     if len(buff) == 129:
-        print 'Cold boot'
+        if verbose:
+            print 'Boot: cold'
         state = buff[0x13]
-        if state != 0x80:
+        if state != 0x80 and verbose:
             print '  WARNING: state: 0x%02X.  Interrupted load?' % state
         # 70-117
         boot_cold(dev)
     elif len(buff) == 133:
-        print 'Warm boot'
+        if verbose:
+            print 'Boot: warm'
         # 70-76
         boot_warm(dev)
     # elif buff == r01_glitch_154:
@@ -352,29 +354,28 @@ def replay(dev):
 
     #cmd.cmd_01(dev) # temp
 
-def open_dev(usbcontext=None):
+def open_dev(usbcontext=None, verbose=False):
     if usbcontext is None:
         usbcontext = usb1.USBContext()
 
-    print 'Scanning for devices...'
+    if verbose:
+        print 'Scanning for devices...'
     for udev in usbcontext.getDeviceList(skip_on_error=True):
         vid = udev.getVendorID()
         pid = udev.getProductID()
         if (vid, pid) == (0x14b9, 0x0001):
-            print 'Found device'
-            print 'Bus %03i Device %03i: ID %04x:%04x' % (
-                udev.getBusNumber(),
-                udev.getDeviceAddress(),
-                vid,
-                pid)
+            if verbose:
+                print 'Found: Bus %03i Device %03i: ID %04x:%04x' % (
+                        udev.getBusNumber(), udev.getDeviceAddress(),
+                        vid, pid)
             return udev.open()
     raise Exception("Failed to find a device")
 
-def get(init=True):
+def get(init=True, verbose=False):
     '''Connect to USB device and return a BP1410 object'''
     usbcontext = usb1.USBContext()
-    dev = open_dev(usbcontext)
+    dev = open_dev(usbcontext, verbose=verbose)
     dev.claimInterface(0)
     if init:
-        replay(dev)
-    return BP1410(dev, usbcontext)
+        replay(dev, verbose=verbose)
+    return BP1410(dev, usbcontext, verbose=verbose)
