@@ -1,9 +1,9 @@
 from bpmicro import startup
 from bpmicro import cmd
 from bpmicro.util import hexdump, add_bool_arg
-from bpmicro.pic16f84.read import replay
+from bpmicro import devices
 
-if __name__ == "__main__":
+def main():
     import argparse 
     
     parser = argparse.ArgumentParser(description='Replay captured USB packets')
@@ -14,14 +14,16 @@ if __name__ == "__main__":
     if args.cycle:
         startup.cycle()
 
+    verbose = True
     bp = startup.get()
+    device = devices.get(bp, 'pic16f84', verbose=verbose)
 
     while True:
         print
         print
         print
         try:
-            (code, eeprom, config) = replay(bp.dev, cont=args.cont)
+            devcfg = device.read({'cont': args.cont})
         except cmd.BusError:
             print 'WARNING: bus error'
             continue
@@ -33,14 +35,18 @@ if __name__ == "__main__":
             continue
 
         print
-        hexdump(code, indent='  ', label='Code')
+        hexdump(devcfg['code'], indent='  ', label='Code')
 
         print
-        hexdump(eeprom, indent='  ', label='EEPROM')
+        hexdump(devcfg['data'], indent='  ', label='EEPROM')
 
         print
         print 'Fuses'
+        config = devcfg['config']
         for i in xrange(0, 4):
             print '  user_id%d:  0x%04X' % (i, config['user_id%d' % i])
         #print '  conf_word: 0x%04X' % (config['conf_word'])
         print '  secure: %s' % (config['secure'])
+
+if __name__ == "__main__":
+    main()

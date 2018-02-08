@@ -318,6 +318,9 @@ def dev_read(dev, cont=False, verbose=False):
         "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x02\x03\x04\x06" \
         "\x07\x08\x09\x28\x29\x2A\x2B\x2D\x2E\x2F\x30\x00\x00"
         )
+    # Observed while shining high power laser on chip
+    if buff == '\x00':
+        raise cmd.Overcurrent('packet W: 1887/1888, R 1 to 1889/1890')
     validate_read("\x01", buff, "packet W: 1887/1888, R 1 to 1889/1890")
     # Generated from packet 1891/1892
     bulkWrite(0x02, "\x20\x01\x00\x50\x36\x00\x00\x00")
