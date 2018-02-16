@@ -13,7 +13,7 @@ import binascii
 import struct
 import time
 
-def my_cmd_57s(dev):
+def read_eeprom(dev):
     ret = bytearray()
     for dati in xrange(0x40):
         if dati == 0:
@@ -514,7 +514,7 @@ def dev_read(dev, cont=False, verbose=False):
     # Generated from packet 2071/2072
     cmd.cmd_02(dev, "\x95\x00\xB0\x82\x09\x00")
 
-    eeprom = my_cmd_57s(dev)
+    eeprom = read_eeprom(dev)
 
     # Generated from packet 2335/2336
     cmd.cmd_50(dev, "\x0D\x00")

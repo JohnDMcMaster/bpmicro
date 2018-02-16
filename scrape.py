@@ -9,15 +9,15 @@ from uvscada.util import hexdump
 
 fw_mods = {}
 if 0:
-    import bpmicro.i87c51.read_fw
-    fw_mods['bpmicro.i87c51.read_fw'] = bpmicro.i87c51.read_fw.p_p2n
-    import bpmicro.i87c51.write_fw
-    fw_mods['bpmicro.i87c51.write_fw'] = bpmicro.i87c51.write_fw.p_p2n
+    import bpmicro.mcs51.i87c51_fw
+    fw_mods['bpmicro.mcs51.i87c51_fw'] = bpmicro.mcs51.i87c51_fw.p_p2n
 if 1:
-    import bpmicro.pic16f84.read_fw
-    fw_mods['bpmicro.pic16f84.read_fw'] = bpmicro.pic16f84.read_fw.p_p2n
-    import bpmicro.pic16f84.write_fw
-    fw_mods['bpmicro.pic16f84.write_fw'] = bpmicro.pic16f84.write_fw.p_p2n
+    import bpmicro.pic.pic16f84_fw
+    fw_mods['bpmicro.pic.pic16f84_fw'] = bpmicro.pic.pic16f84_fw.p_p2n
+
+if 1:
+    import bpmicro.pic.pic17c43_fw
+    fw_mods['bpmicro.pic.pic17c43_fw'] = bpmicro.pic.pic17c43_fw.p_p2n
 
 pi = None
 ps = None
