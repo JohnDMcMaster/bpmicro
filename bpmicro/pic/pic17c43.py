@@ -7,7 +7,7 @@ from bpmicro.usb import usb_wraps
 import bpmicro.device
 
 import bpmicro.pic.pic16f84_fw
-
+import bpmicro.pic.pic17c43_fw
 
 def dev_read(dev, cont=False, verbose=False):
     bulkRead, bulkWrite, controlRead, controlWrite = usb_wraps(dev)

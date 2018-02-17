@@ -61,44 +61,7 @@ def dev_read(dev, cont=False, verbose=False):
         "\x00\xFE\xFF\x00"
         )
     validate_read("\xA4\x06", buff, "packet W: 1651/1652, R 1 to 1653/1654")
-    # NOTE:: req max 512 but got 5
-    # Generated from packet 1655/1656
-    #cmd.cmd_01(dev)
-    # NOTE:: req max 512 but got 136
-    # Generated from packet 1659/1660
-    #cmd.sn_read(dev)
 
-    # Technology adapter info
-    if 0:
-        # NOTE:: req max 512 but got 35
-        # Generated from packet 1663/1664
-        buff = cmd.bulk2b(dev, 
-            "\x14\x38\x25\x00\x00\x04\x00\x90\x32\x90\x00\xA7\x02\x1F\x00\x14" \
-            "\x40\x25\x00\x00\x01\x00\x3C\x36\x0E\x01"
-            )
-        validate_read(
-            "\x14\x00\x54\x41\x38\x34\x56\x4C\x56\x5F\x46\x58\x34\x00\x00\x00" \
-            "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x3E\x2C"
-            , buff, "packet W: 1663/1664, R 1 to 1665/1666")
-    
-    # NOTE:: req max 512 but got 35
-    # Generated from packet 1667/1668
-    #cmd.gpio_readi(dev)
-    # NOTE:: req max 512 but got 5
-    # Generated from packet 1671/1672
-    #cmd.gpio_readi(dev)
-    # NOTE:: req max 512 but got 5
-    # Generated from packet 1675/1676
-    #cmd.sm_info22(dev)
-    # NOTE:: req max 512 but got 7
-    # Generated from packet 1679/1680
-    #cmd.sm_info24(dev)
-    # NOTE:: req max 512 but got 7
-    # Generated from packet 1683/1684
-    #cmd.sm_read(dev)
-    # NOTE:: req max 512 but got 35
-    # Generated from packet 1687/1688
-    #cmd.cmd_01(dev)
     # NOTE:: req max 512 but got 136
     # Generated from packet 1691/1692
     bulkWrite(0x02, "\x43\x19\x08\x00\x00")
@@ -108,45 +71,15 @@ def dev_read(dev, cont=False, verbose=False):
     cmd.cmd_41(dev)
     # Generated from packet 1697/1698
     cmd.cmd_10(dev)
-    # NOTE:: req max 512 but got 9
-    # Generated from packet 1701/1702
-    #cmd.sm_read(dev)
-    # NOTE:: req max 512 but got 35
-    # Generated from packet 1705/1706
-    #cmd.sm_insert(dev)
     # NOTE:: req max 512 but got 35
     # Generated from packet 1709/1710
     cmd.cmd_45(dev)
     # NOTE:: req max 512 but got 103
     # Generated from packet 1713/1714
     cmd.cmd_49(dev)
-    # NOTE:: req max 512 but got 5
-    # Generated from packet 1717/1718
-    #cmd.gpio_readi(dev)
-    # NOTE:: req max 512 but got 5
-    # Generated from packet 1721/1722
-    #cmd.gpio_readi(dev)
-    # NOTE:: req max 512 but got 5
-    # Generated from packet 1725/1726
-    #cmd.sm_info22(dev)
-    # NOTE:: req max 512 but got 7
-    # Generated from packet 1729/1730
-    #cmd.sm_info24(dev)
-    # NOTE:: req max 512 but got 7
-    # Generated from packet 1733/1734
-    #cmd.sm_read(dev)
     # NOTE:: req max 512 but got 35
     # Generated from packet 1737/1738
     cmd.cmd_49(dev)
-    # NOTE:: req max 512 but got 5
-    # Generated from packet 1741/1742
-    #cmd.sm_read(dev)
-    # NOTE:: req max 512 but got 35
-    # Generated from packet 1745/1746
-    #cmd.sm_insert(dev)
-    # NOTE:: req max 512 but got 35
-    # Generated from packet 1749/1750
-    #cmd.sm_info10(dev)
     # NOTE:: req max 512 but got 11
     # Generated from packet 1753/1754
     cmd.cmd_3B(dev)
@@ -218,16 +151,6 @@ def dev_read(dev, cont=False, verbose=False):
         "\x14\x00\x54\x41\x38\x34\x56\x4C\x56\x5F\x46\x58\x34\x00\x00\x00" \
         "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x3E\x2C"
         , buff, "packet W: 1803/1804, R 1 to 1805/1806")
-    # Generated from packet 1807/1808
-    #cmd.gpio_readi(dev)
-    # Generated from packet 1811/1812
-    #cmd.gpio_readi(dev)
-    # Generated from packet 1815/1816
-    #cmd.sm_info22(dev)
-    # Generated from packet 1819/1820
-    #cmd.sm_info24(dev)
-    # Generated from packet 1823/1824
-    #cmd.sm_read(dev)
     # Generated from packet 1827/1828
     buff = cmd.bulk2b(dev, "\x48\x00\x10\x82\x02")
     validate_read("\x82\x00\x10\x01\x09\x00", buff, "packet W: 1827/1828, R 1 to 1829/1830")
@@ -520,24 +443,8 @@ def dev_read(dev, cont=False, verbose=False):
     cmd.cmd_57s(dev, "\x96", "\x00\x00")
     # Generated from packet 2359/2360
     cmd.led_mask(dev, "pass")
-    # Generated from packet 2363/2364
-    #cmd.gpio_readi(dev)
-    # Generated from packet 2367/2368
-    #cmd.gpio_readi(dev)
-    # Generated from packet 2371/2372
-    #cmd.sm_info22(dev)
-    # Generated from packet 2375/2376
-    #cmd.sm_info24(dev)
-    # Generated from packet 2379/2380
-    #cmd.sm_read(dev)
     # Generated from packet 2383/2384
     cmd.cmd_49(dev)
-    # Generated from packet 2387/2388
-    #cmd.sm_read(dev)
-    # Generated from packet 2391/2392
-    #cmd.sm_insert(dev)
-    # Generated from packet 2395/2396
-    #cmd.sm_info10(dev)
 
     return {'code': code, 'data': eeprom, 'config': config}
 
