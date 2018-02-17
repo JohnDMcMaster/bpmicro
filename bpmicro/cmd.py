@@ -644,3 +644,25 @@ def cmd_1438(dev):
         "\x14\x00\x54\x41\x38\x34\x56\x4C\x56\x5F\x46\x58\x34\x00\x00\x00" \
         "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x3E\x2C",
         buff, "packet W: 253/254, R: 255/256")
+
+def check_cont(dev, verbose=False, removed_ref=None):
+        # Generated from packet 241/242
+        # Takes about 0.05 sec on pass but 0.52 sec on fail
+        tstart = time.time()
+        buff = cmd_57s(dev, "\x85", None,  "check_cont")
+        tend = time.time()
+        if verbose:
+            print 'Continuity test took %0.3f sec' % (tend - tstart,)
+            #util.hexdump(buff, label='Continuity', indent='  ')
+        # Chip inserted
+        if buff == "\x01":
+            if verbose:
+                print 'Continuity OK'
+        # Chip removed
+        elif removed_ref and buff == removed_ref:
+            raise ContFail('Continuity complete failure (part not inserted?)')
+        # Inserting chip while running
+        # I'm guessing its telling me which pins failed
+        # Lets bend a pin and verify
+        else:
+            raise ContFail('Continuity partial failure (dirty contacts?  Inserted wrong?)')

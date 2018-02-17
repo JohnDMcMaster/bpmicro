@@ -6,6 +6,7 @@ import subprocess
 
 from bpmicro.cmd import led_i2s
 from uvscada.util import hexdump
+from bpmicro.util import add_bool_arg
 
 fw_mods = {}
 if 0:
@@ -24,8 +25,15 @@ ps = None
 
 prefix = ' ' * 8
 indent = ''
+line_buff = []
+def lines_clear():
+    del line_buff[:]
+def lines_commit():
+    for line in line_buff:
+        print line
+    del line_buff[:]
 def line(s):
-    print '%s%s' % (indent, s)
+    line_buff.append('%s%s' % (indent, s))
 def indentP():
     global indent
     indent += '    '
@@ -34,6 +42,15 @@ def indentN():
     indent = indent[4:]
 
 dumb = False
+omit_ro = True
+
+def emit_ro():
+    '''Return true if keeping ro. Otherwise clear line buffer and return false'''
+    if omit_ro:
+        lines_clear()
+        return False
+    else:
+        return False
 
 # args.big_thresh
 big_pkt = {}
@@ -203,11 +220,13 @@ def peek_bulk2(p):
             prl['packn'][0], prl['packn'][1]))
 
     if cmd == "\x01":
-        line('cmd.cmd_01(dev)')
+        if emit_ro():
+            line('cmd.cmd_01(dev)')
     elif cmd == "\x02":
         line('cmd.cmd_02(dev, %s)' % fmt_terse(reply))
     elif cmd == "\x03":
-        line('cmd.gpio_readi(dev)')
+        if emit_ro():
+            line('cmd.gpio_readi(dev)')
     elif 0 and cmd[0] == "\x08":
         '''
         cmp_mask(
@@ -228,25 +247,30 @@ def peek_bulk2(p):
         #line('led_mask(dev, 0x%02X)' % ord(cmd[1]))
         line('cmd.led_mask(dev, "%s")' % led_i2s[ord(cmd[1])])
     elif cmd == "\x0E\x00":
-        line('cmd.sn_read(dev)')
+        if emit_ro():
+            line('cmd.sn_read(dev)')
     elif cmd == "\x0E\x02":
-        line('cmd.sm_read(dev)')
+        if emit_ro():
+            line('cmd.sm_read(dev)')
     elif cmd == "\x10\x80\x02":
         cmp_buff("\x80\x00\x00\x00\x09\x00", reply)
         line('cmd.cmd_10(dev)')
+    # XXX: investigate
+    # is likely offset + number to read
     elif cmd[0] == "\x22":
-        if cmd == "\x22\x02\x10\x00\x13\x00\x06":
-            line('cmd.sm_info10(dev)')
-        elif cmd == "\x22\x02\x10\x00\x1F\x00\x06":
-            line('cmd.sm_insert(dev)')
-        elif cmd == "\x22\x02\x22\x00\x23\x00\x06":
-            line('cmd.sm_info22(dev)')
-        elif cmd == "\x22\x02\x24\x00\x25\x00\x06":
-            line('cmd.sm_info24(dev)')
-        else:
-            #raise Exception("Unexpected read")
-            line('# Unexpected (SM?) read, falling back to low level command')
-            bulk2(p_w, p_rs)
+        if emit_ro():
+            if cmd == "\x22\x02\x10\x00\x13\x00\x06":
+                line('cmd.sm_info10(dev)')
+            elif cmd == "\x22\x02\x10\x00\x1F\x00\x06":
+                line('cmd.sm_insert(dev)')
+            elif cmd == "\x22\x02\x22\x00\x23\x00\x06":
+                line('cmd.sm_info22(dev)')
+            elif cmd == "\x22\x02\x24\x00\x25\x00\x06":
+                line('cmd.sm_info24(dev)')
+            else:
+                #raise Exception("Unexpected read")
+                line('# Unexpected (SM?) read, falling back to low level command')
+                bulk2(p_w, p_rs)
     elif cmd == "\x45\x01\x00\x00\x31\x00\x06":
         cmp_buff( \
                 "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF" \
@@ -275,7 +299,10 @@ def peek_bulk2(p):
             if cmd[i+2] != "\x00":
                 raise Exception()
             cmds += cmd[i+1]
-        line('cmd.cmd_57s(dev, %s, %s)' % (fmt_terse(cmds), fmt_terse(reply)))
+        if cmds == '\x85':
+            line('cmd.check_cont(dev)')
+        else:
+            line('cmd.cmd_57s(dev, %s, %s)' % (fmt_terse(cmds), fmt_terse(reply)))
     # Unknown response
     # Do generic bulk read
     else:
@@ -414,10 +441,11 @@ def dump(fin):
 
     
     while pi < len(ps):
+        comment = False
         p = ps[pi]
         if p['type'] == 'comment':
             line('# %s' % p['v'])
-            pass
+            comment = True
         elif p['type'] == 'controlRead':
             if not dumb and (p['req'], p['val'], p['ind'], p['len']) == (0xC0, 0xB0, 0x0000, 0x0000):
                 pi = eat_packet('bulkRead')
@@ -449,8 +477,11 @@ def dump(fin):
             bulk_write(p)
         else:
             raise Exception("Unknown type: %s" % p['type'])
+        if not comment:
+            lines_commit()
         pi += 1
 
+    lines_commit()
     indentN()
 
     print '''
@@ -494,12 +525,14 @@ if __name__ == "__main__":
     for pkt, name in big_pkt.iteritems():
         print '%s = \\%s' % (name, dump_packet(pkt))
 
+    lines_commit()
 
 if __name__ == "__main__":
     import argparse 
     
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('--dumb', action='store_true')
+    add_bool_arg(parser, '--omit-ro', default=True, help='Omit read only requests (ex: get SM info)')
     parser.add_argument('--big-thresh', type=int, default=255)
     parser.add_argument('--usbrply', default='')
     parser.add_argument('fin')
@@ -515,5 +548,6 @@ if __name__ == "__main__":
         fin = args.fin
 
     dumb=args.dumb
+    omit_ro=args.omit_ro
     dump(fin)
 

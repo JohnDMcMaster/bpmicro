@@ -274,27 +274,10 @@ def dev_read(dev, cont=False, verbose=False):
     # Times out if chip not inserted
     #cmd.cmd_57s(dev, "\x85", "\x01")
     if cont:
-        # Generated from packet 241/242
-        # Takes about 0.05 sec on pass but 0.52 sec on fail
-        tstart = time.time()
-        buff = cmd.cmd_57s(dev, "\x85", None,  "cmd_57")
-        tend = time.time()
-        if verbose:
-            print 'Continuity test took %0.3f sec' % (tend - tstart,)
-            util.hexdump(buff, label='Continuity', indent='  ')
-        # Chip inserted
-        if buff == "\x01":
-            if verbose:
-                print 'Continuity OK'
-        # Chip removed
-        elif buff == ("\x02\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00" \
-                    "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"):
-            raise cmd.ContFail('Continuity complete failure (part not inserted?)')
-        # Inserting chip while running
-        # I'm guessing its telling me which pins failed
-        # Lets bend a pin and verify
-        else:
-            raise cmd.ContFail('Continuity partial failure (dirty contacts?  Inserted wrong?)')
+        removed_ref = \
+                "\x02\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00" \
+                "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+        cmd.check_cont(dev, verbose=verbose, removed_ref=removed_ref)
 
     # Generated from packet 1877/1878
     cmd.cmd_50(dev, "\x71\x1B")
