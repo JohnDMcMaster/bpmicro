@@ -105,7 +105,7 @@ def boot_warm(dev):
     # Generated from packet 74/75
     #cmd.cmd_01(dev)
 
-def replay(dev, verbose=False):
+def init_dev(dev, verbose=False):
     bulkRead, bulkWrite, controlRead, controlWrite = usb_wraps(dev)
 
     '''
@@ -377,5 +377,5 @@ def get(init=True, verbose=False):
     dev = open_dev(usbcontext, verbose=verbose)
     dev.claimInterface(0)
     if init:
-        replay(dev, verbose=verbose)
+        init_dev(dev, verbose=verbose)
     return BP1410(dev, usbcontext, verbose=verbose)

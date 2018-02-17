@@ -105,11 +105,14 @@ def cmp_mask(exp, mask, act):
 def peekp():
     return nextp()[1]
 
+class OutOfPackets(Exception):
+    pass
+
 def nextp():
     ppi = pi + 1
     while True:
         if ppi >= len(ps):
-            raise Exception("Out of packets")
+            raise OutOfPackets("Out of packets, started packet %d, at %d" % (pi, ppi))
         p = ps[ppi]
         if p['type'] != 'comment':
             return ppi, p
@@ -117,7 +120,46 @@ def nextp():
 
 def bulk2(p_w, p_rs):
     cmd = binascii.unhexlify(p_w['data'])
+    reply_all = bulk2_combine_packets(p_rs)
 
+    pack_str = 'packet W: %s/%s, R %d to %s/%s' % (
+            p_w['packn'][0], p_w['packn'][1],
+            len(p_rs),
+            p_rs[-1]['packn'][0], p_rs[-1]['packn'][1])
+    line('buff = cmd.bulk2b(dev, %s)' % (fmt_terse(cmd, p_w['packn'][0]),))
+    #line('# Discarded %d / %d bytes => %d bytes' % (len(reply_full) - len(reply), len(reply_full), len(reply)))
+    line('validate_read(%s, buff, "%s")' % (fmt_terse(reply_all, p_rs[-1]['packn'][0]), pack_str))
+
+    startup_end_cmd = \
+        "\x1D\x10\x01\x09\x00\x00\x00\x15\x60\x00\x00\x00\x00\x00\x00\x00" \
+        "\x00\x00\x00\x00\x00\x00\x1C\x30\x00\x00\x00\x00\x00\x00\x00\x48" \
+        "\x00\x12\xAA"
+    if cmd == startup_end_cmd:
+        line('')
+        line('')
+        line('')
+        line('# END OF STARTUP')
+        line('')
+        line('')
+        line('')
+
+def bulk2_next_prs(p_r=None):
+    global pi
+
+    p_rs = []
+    if p_r:
+        p_rs.append(p_r)
+    while True:
+        try:
+            if peekp()['type'] != 'bulkRead':
+                break
+        except OutOfPackets:
+            break
+        pi, p_r = nextp()
+        p_rs.append(p_r)
+    return p_rs
+
+def bulk2_combine_packets(p_rs):
     reply_all = ''
     for p_r in p_rs:
         reply_full = binascii.unhexlify(p_r['data'])
@@ -126,27 +168,39 @@ def bulk2(p_w, p_rs):
         if pprefix != 0x08:
             pprefix_str = ', prefix=0x%02X' % pprefix
             raise Exception(pprefix_str)
+    return reply_all
 
-    pack_str = 'packet W: %s/%s, R %d to %s/%s' % (
-            p_w['packn'][0], p_w['packn'][1],
-            len(p_rs),
-            p_r['packn'][0], p_r['packn'][1])
-    line('buff = cmd.bulk2b(dev, %s)' % (fmt_terse(cmd, p_w['packn'][0]),))
-    #line('# Discarded %d / %d bytes => %d bytes' % (len(reply_full) - len(reply), len(reply_full), len(reply)))
-    line('validate_read(%s, buff, "%s")' % (fmt_terse(reply_all, p_r['packn'][0]), pack_str))
+def bulk2_get_reply(p_r=None):
+    '''
+    Read all following bulk2 packets and aggregate response
+    Optionally pass in an already fetched packet (p_r)
+    '''
+    p_rs = bulk2_next_prs(p_r)
+    return p_rs, bulk2_combine_packets(p_rs)
 
 def peek_bulk2(p):
-    global pi
+    '''bulk2 command resulting in read(s)'''
+    #global pi
 
     p_w = p
-    pi, p_r = nextp()
+    #pi, p_r = nextp()
+    p_rs, reply = bulk2_get_reply()
+    # Should have at least one reply
+    prl = p_rs[-1]
 
     cmd = binascii.unhexlify(p_w['data'])
+    '''
     reply_full = binascii.unhexlify(p_r['data'])
     reply, _truncate, pprefix = pkt_strip(reply_full)
     if pprefix != 0x08:
         pprefix_str = ', prefix=0x%02X' % pprefix
         raise Exception(pprefix_str)
+    '''
+
+    line('# bulk2 aggregate: packet W: %s/%s, %d to R %s/%s' % (
+            p_w['packn'][0], p_w['packn'][1],
+            len(p_rs),
+            prl['packn'][0], prl['packn'][1]))
 
     if cmd == "\x01":
         line('cmd.cmd_01(dev)')
@@ -155,6 +209,7 @@ def peek_bulk2(p):
     elif cmd == "\x03":
         line('cmd.gpio_readi(dev)')
     elif 0 and cmd[0] == "\x08":
+        '''
         cmp_mask(
                 "\x08\x01\x57\x00\x00",
                 "\xFF\xFF\xFF\x00\xFF",
@@ -162,10 +217,11 @@ def peek_bulk2(p):
         try:
             cmp_buff("\x00\x00", reply)
         except CmpFail:
-            line('# Bad reply for cmd_08()')
-            bulk2(p_w, [p_r])
+            line('# Unexpected reply for cmd_08(), falling back to low level command')
+            bulk2(p_w, p_rs)
         else:
             line('cmd.cmd_08(dev, %s)' % (fmt_terse(cmd[3])))
+        '''
     elif cmd[0] == "\x0C":
         if len(cmd) != 3 or cmd[2] != "\x30":
             raise Exception("Unexpected")
@@ -189,8 +245,8 @@ def peek_bulk2(p):
             line('cmd.sm_info24(dev)')
         else:
             #raise Exception("Unexpected read")
-            line('# Unexpected SM read')
-            bulk2(p_w, [p_r])
+            line('# Unexpected (SM?) read, falling back to low level command')
+            bulk2(p_w, p_rs)
     elif cmd == "\x45\x01\x00\x00\x31\x00\x06":
         cmp_buff( \
                 "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF" \
@@ -223,10 +279,6 @@ def peek_bulk2(p):
     # Unknown response
     # Do generic bulk read
     else:
-        p_rs = [p_r]
-        while peekp()['type'] == 'bulkRead':
-            pi, p_r = nextp()
-            p_rs.append(p_r)
         bulk2(p_w, p_rs)
 
 def bulk86_next_read(p):
@@ -390,7 +442,7 @@ def dump(fin):
             '''
             data = binascii.unhexlify(p['data'])
             line('buff = controlWrite(0x%02X, 0x%02X, 0x%04X, 0x%04X, %s)' % (
-                    p['reqt'], p['req'], p['val'], p['ind'], str2hex(data, prefix=prefix)))
+                    p['reqt'], p['req'], p['val'], p['ind'], fmt_terse(data, pktn=p['packn'][0])))
         elif p['type'] == 'bulkRead':
             bulk86_next_read(p)
         elif p['type'] == 'bulkWrite':

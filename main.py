@@ -4,7 +4,7 @@ from bpmicro.util import hexdump, add_bool_arg
 
 def run(operation, device,
         code_fn, data_fn, config_fn,
-        cont, erase, verify, verbose, dir_):
+        cont, erase, verify, verbose, dir_, init=True):
     device_str = device
     '''
     Device: chip model
@@ -12,7 +12,7 @@ def run(operation, device,
     bp = None
     device = None
     if operation != 'list_device':
-        bp = startup.get(verbose=verbose)
+        bp = startup.get(verbose=verbose, init=init)
         if operation != 'nop':
             device = devices.get(bp, device_str, verbose=verbose)
 
@@ -86,6 +86,7 @@ def main():
     add_bool_arg(parser, '--verify', default=True, help='Read back after write (write only)') 
     add_bool_arg(parser, '--verbose', default=True, help='More verbose output') 
     add_bool_arg(parser, '--dir', default=None, help='Force input/output directory') 
+    add_bool_arg(parser, '--init', default=True, help='Advanced / developer only') 
     parser.add_argument('operation', help='Operation: read, program, erase, protect, list_device, nop') 
     parser.add_argument('device', nargs='?', help='Device to use') 
     parser.add_argument('code', nargs='?', help='Read/write input/output file or directory: primary data such as EPROM or flash') 
@@ -95,7 +96,7 @@ def main():
 
     run(args.operation, args.device,
             code_fn=args.code, data_fn=args.data, config_fn=args.config,
-            cont=args.cont, erase=args.erase, verify=args.verify, verbose=args.verbose, dir_=args.dir)
+            cont=args.cont, erase=args.erase, verify=args.verify, verbose=args.verbose, dir_=args.dir, init=args.init)
 
 if __name__ == "__main__":
     main()

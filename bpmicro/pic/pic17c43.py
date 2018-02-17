@@ -11,18 +11,13 @@ import bpmicro.device
 
 import bpmicro.pic.pic16f84_fw
 import pic17c43_fw
+import pic17c43_fw as my_fw
 
 import binascii
 import struct
 import time
 
-
-
-
-
-
-
-
+from bpmicro import startup
 
 
 
@@ -31,8 +26,26 @@ import time
 def dev_read(dev, cont=False, verbose=False):
     bulkRead, bulkWrite, controlRead, controlWrite = usb_wraps(dev)
 
+
+
+    # Generated from packet 1735/1736
+    # bulk2 aggregate: packet W: 1735/1736, 1 to R 1737/1738
+    cmd.gpio_readi(dev)
+    # Generated from packet 1739/1740
+    # bulk2 aggregate: packet W: 1739/1740, 1 to R 1741/1742
+    cmd.gpio_readi(dev)
+    # Generated from packet 1743/1744
+    # bulk2 aggregate: packet W: 1743/1744, 1 to R 1745/1746
+    cmd.sm_info22(dev)
+    # Generated from packet 1747/1748
+    # bulk2 aggregate: packet W: 1747/1748, 1 to R 1749/1750
+    cmd.sm_info24(dev)
+    # Generated from packet 1751/1752
+    # bulk2 aggregate: packet W: 1751/1752, 1 to R 1753/1754
+    cmd.sm_read(dev)
     # Generated from packet 1755/1756
-    # Unexpected SM read
+    # bulk2 aggregate: packet W: 1755/1756, 1 to R 1757/1758
+    # Unexpected (SM?) read, falling back to low level command
     buff = cmd.bulk2b(dev, "\x22\x02\x25\x00\x25\x00\x06")
     validate_read("\x00\x00", buff, "packet W: 1755/1756, R 1 to 1757/1758")
     # Generated from packet 2237/2238
@@ -45,9 +58,11 @@ def dev_read(dev, cont=False, verbose=False):
     validate_read("\x16", buff, "packet 2239/2240")
     # NOTE:: req max 512 but got 4
     # Generated from packet 2241/2242
+    # bulk2 aggregate: packet W: 2241/2242, 1 to R 2243/2244
     cmd.cmd_01(dev)
     # NOTE:: req max 512 but got 136
     # Generated from packet 2245/2246
+    # bulk2 aggregate: packet W: 2245/2246, 1 to R 2247/2248
     buff = cmd.bulk2b(dev, 
         "\x43\x19\x20\x00\x00\x3B\x7E\x25\x00\x00\xFE\xFF\x3B\x7C\x25\x00" \
         "\x00\xFE\xFF\x00"
@@ -55,12 +70,15 @@ def dev_read(dev, cont=False, verbose=False):
     validate_read("\xA4\x06", buff, "packet W: 2245/2246, R 1 to 2247/2248")
     # NOTE:: req max 512 but got 5
     # Generated from packet 2249/2250
+    # bulk2 aggregate: packet W: 2249/2250, 1 to R 2251/2252
     cmd.cmd_01(dev)
     # NOTE:: req max 512 but got 136
     # Generated from packet 2253/2254
+    # bulk2 aggregate: packet W: 2253/2254, 1 to R 2255/2256
     cmd.sn_read(dev)
     # NOTE:: req max 512 but got 35
     # Generated from packet 2257/2258
+    # bulk2 aggregate: packet W: 2257/2258, 1 to R 2259/2260
     buff = cmd.bulk2b(dev, 
         "\x14\x38\x25\x00\x00\x04\x00\x90\x32\x90\x00\xA7\x02\x1F\x00\x14" \
         "\x40\x25\x00\x00\x01\x00\x3C\x36\x0E\x01"
@@ -71,35 +89,28 @@ def dev_read(dev, cont=False, verbose=False):
         , buff, "packet W: 2257/2258, R 1 to 2259/2260")
     # NOTE:: req max 512 but got 35
     # Generated from packet 2261/2262
+    # bulk2 aggregate: packet W: 2261/2262, 1 to R 2263/2264
     cmd.gpio_readi(dev)
     # NOTE:: req max 512 but got 5
     # Generated from packet 2265/2266
+    # bulk2 aggregate: packet W: 2265/2266, 1 to R 2267/2268
     cmd.gpio_readi(dev)
     # NOTE:: req max 512 but got 5
     # Generated from packet 2269/2270
+    # bulk2 aggregate: packet W: 2269/2270, 1 to R 2271/2272
     cmd.sm_info22(dev)
     # NOTE:: req max 512 but got 7
     # Generated from packet 2273/2274
+    # bulk2 aggregate: packet W: 2273/2274, 1 to R 2275/2276
     cmd.sm_info24(dev)
     # NOTE:: req max 512 but got 7
     # Generated from packet 2277/2278
+    # bulk2 aggregate: packet W: 2277/2278, 1 to R 2279/2280
     cmd.sm_read(dev)
     # NOTE:: req max 512 but got 35
     # Generated from packet 2281/2282
+    # bulk2 aggregate: packet W: 2281/2282, 2 to R 2285/2286
     cmd.cmd_01(dev)
-    if 0:
-        # NOTE:: req max 512 but got 32
-        # Generated from packet 2285/2286
-        _prefix, buff, _size = cmd.bulk86_next_read(dev)
-        validate_read(
-            "\x09\x00\x08\x00\xFF\x00\xC4\x1E\x00\x00\xCC\x1E\x00\x00\xB4\x46" \
-            "\x00\x00\xD0\x1E\x00\x00\xC0\x1E\x01\x00\xB0\x1E\x01\x00\x00\x00" \
-            "\x30\x55\x01\x00\x00\x00\x00\x00\x02\x00\x80\x01\xD0\x01\x02\x00" \
-            "\x01\x00\x00\x00\x56\x10\x00\x00\xA0\x25\x00\x00\x84\x25\x00\x00" \
-            "\x00\x00\x01\x00\x7C\x25\x00\x00\x7E\x25\x00\x00\x80\x25\x00\x00" \
-            "\x74\x46\x00\x00\x38\x11\x00\x00\x3C\x11\x00\x00\x40\x11\x00\x00" \
-            "\x44\x11\x00\x00\xC0\x1E\x00\x00"
-            , buff, "packet 2285/2286")
     # NOTE:: req max 512 but got 107
     # Generated from packet 2287/2288
     bulkWrite(0x02, "\x43\x19\x20\x00\x00")
@@ -108,50 +119,65 @@ def dev_read(dev, cont=False, verbose=False):
     # Generated from packet 2291/2292
     cmd.cmd_41(dev)
     # Generated from packet 2293/2294
+    # bulk2 aggregate: packet W: 2293/2294, 1 to R 2295/2296
     cmd.cmd_10(dev)
     # NOTE:: req max 512 but got 9
     # Generated from packet 2297/2298
+    # bulk2 aggregate: packet W: 2297/2298, 1 to R 2299/2300
     cmd.sm_read(dev)
     # NOTE:: req max 512 but got 35
     # Generated from packet 2301/2302
+    # bulk2 aggregate: packet W: 2301/2302, 1 to R 2303/2304
     cmd.sm_insert(dev)
     # NOTE:: req max 512 but got 35
     # Generated from packet 2305/2306
+    # bulk2 aggregate: packet W: 2305/2306, 1 to R 2307/2308
     cmd.cmd_45(dev)
     # NOTE:: req max 512 but got 103
     # Generated from packet 2309/2310
+    # bulk2 aggregate: packet W: 2309/2310, 1 to R 2311/2312
     cmd.cmd_49(dev)
     # NOTE:: req max 512 but got 5
     # Generated from packet 2313/2314
+    # bulk2 aggregate: packet W: 2313/2314, 1 to R 2315/2316
     cmd.gpio_readi(dev)
     # NOTE:: req max 512 but got 5
     # Generated from packet 2317/2318
+    # bulk2 aggregate: packet W: 2317/2318, 1 to R 2319/2320
     cmd.gpio_readi(dev)
     # NOTE:: req max 512 but got 5
     # Generated from packet 2321/2322
+    # bulk2 aggregate: packet W: 2321/2322, 1 to R 2323/2324
     cmd.sm_info22(dev)
     # NOTE:: req max 512 but got 7
     # Generated from packet 2325/2326
+    # bulk2 aggregate: packet W: 2325/2326, 1 to R 2327/2328
     cmd.sm_info24(dev)
     # NOTE:: req max 512 but got 7
     # Generated from packet 2329/2330
+    # bulk2 aggregate: packet W: 2329/2330, 1 to R 2331/2332
     cmd.sm_read(dev)
     # NOTE:: req max 512 but got 35
     # Generated from packet 2333/2334
+    # bulk2 aggregate: packet W: 2333/2334, 1 to R 2335/2336
     cmd.cmd_49(dev)
     # NOTE:: req max 512 but got 5
     # Generated from packet 2337/2338
+    # bulk2 aggregate: packet W: 2337/2338, 1 to R 2339/2340
     cmd.sm_read(dev)
     # NOTE:: req max 512 but got 35
     # Generated from packet 2341/2342
+    # bulk2 aggregate: packet W: 2341/2342, 1 to R 2343/2344
     cmd.sm_insert(dev)
     # NOTE:: req max 512 but got 35
     # Generated from packet 2347/2348
+    # bulk2 aggregate: packet W: 2347/2348, 1 to R 2349/2350
     cmd.sm_info10(dev)
     # NOTE:: req max 512 but got 11
     # Generated from packet 2351/2352
     cmd.cmd_3B(dev)
     # Generated from packet 2353/2354
+    # bulk2 aggregate: packet W: 2353/2354, 1 to R 2355/2356
     cmd.cmd_4A(dev)
     # NOTE:: req max 512 but got 5
     # Generated from packet 2357/2358
@@ -161,6 +187,7 @@ def dev_read(dev, cont=False, verbose=False):
     # Generated from packet 2363/2364
     cmd.cmd_50(dev, "\x45\x00")
     # Generated from packet 2365/2366
+    # bulk2 aggregate: packet W: 2365/2366, 1 to R 2367/2368
     buff = cmd.bulk2b(dev, 
         "\xE9\x03\x00\x00\x00\x90\x00\x00\xE9\x03\x00\x00\x00\x90\x01\x10" \
         "\xE9\x03\x00\x00\x00\x90\x00\x00\xE9\x03\x00\x00\x00\x90\x01\x80" \
@@ -170,10 +197,12 @@ def dev_read(dev, cont=False, verbose=False):
         )
     validate_read("\x80\x00", buff, "packet W: 2365/2366, R 1 to 2367/2368")
     # Generated from packet 2371/2372
+    # bulk2 aggregate: packet W: 2371/2372, 1 to R 2373/2374
     cmd.cmd_02(dev, "\x81\x00\x50\x00\x09\x00")
     # Generated from packet 2375/2376
     cmd.cmd_50(dev, "\xC0\x00")
     # Generated from packet 2377/2378
+    # bulk2 aggregate: packet W: 2377/2378, 1 to R 2381/2382
     buff = cmd.bulk2b(dev, 
         "\x66\xB8\x01\x2D\x81\xE3\xFF\xFF\x00\x00\x66\xBB\x18\x00\x66\xC7" \
         "\x05\x30\x40\x00\xC0\xF0\xFF\x89\xD9\xC1\xE1\x02\x66\xC7\x81\x02" \
@@ -190,6 +219,7 @@ def dev_read(dev, cont=False, verbose=False):
         )
     validate_read("\x81\x00", buff, "packet W: 2377/2378, R 1 to 2381/2382")
     # Generated from packet 2383/2384
+    # bulk2 aggregate: packet W: 2383/2384, 1 to R 2385/2386
     cmd.cmd_02(dev, "\x82\x00\x10\x01\x09\x00")
     # Generated from packet 2387/2388
     bulkWrite(0x02, 
@@ -197,20 +227,25 @@ def dev_read(dev, cont=False, verbose=False):
         "\x57\x81\x00"
         )
     # Generated from packet 2393/2394
+    # bulk2 aggregate: packet W: 2393/2394, 1 to R 2395/2396
     cmd.cmd_02(dev, "\x82\x00\x10\x01\x09\x00")
     # Generated from packet 2397/2398
+    # bulk2 aggregate: packet W: 2397/2398, 1 to R 2399/2402
     cmd.led_mask(dev, "active")
     # Generated from packet 2403/2404
     cmd.cmd_50(dev, "\x18\x00")
     # Generated from packet 2405/2406
+    # bulk2 aggregate: packet W: 2405/2406, 1 to R 2407/2408
     buff = cmd.bulk2b(dev, 
         "\x66\xB8\x01\x32\x66\x89\x05\x06\x00\x09\x00\x66\xB9\x00\x00\xB2" \
         "\x00\xFB\xFF\x25\x44\x11\x00\x00"
         )
     validate_read("\x82\x00", buff, "packet W: 2405/2406, R 1 to 2407/2408")
     # Generated from packet 2411/2412
+    # bulk2 aggregate: packet W: 2411/2412, 1 to R 2413/2414
     cmd.cmd_02(dev, "\x83\x00\x30\x01\x09\x00")
     # Generated from packet 2415/2416
+    # bulk2 aggregate: packet W: 2415/2416, 1 to R 2417/2428
     buff = cmd.bulk2b(dev, 
         "\x57\x82\x00\x20\x01\x00\x2B\x3B\x0C\x22\x00\xC0\x40\x00\x3B\x0E" \
         "\x22\x00\xC0\x00\x00\x3B\x1A\x22\x00\xC0\x18\x00\x0E\x01"
@@ -220,41 +255,53 @@ def dev_read(dev, cont=False, verbose=False):
         "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x3E\x2C"
         , buff, "packet W: 2415/2416, R 1 to 2417/2428")
     # Generated from packet 2429/2430
+    # bulk2 aggregate: packet W: 2429/2430, 1 to R 2431/2432
     cmd.gpio_readi(dev)
     # Generated from packet 2433/2434
+    # bulk2 aggregate: packet W: 2433/2434, 1 to R 2435/2436
     cmd.gpio_readi(dev)
     # Generated from packet 2439/2440
+    # bulk2 aggregate: packet W: 2439/2440, 1 to R 2441/2442
     cmd.sm_info22(dev)
     # Generated from packet 2443/2444
+    # bulk2 aggregate: packet W: 2443/2444, 1 to R 2447/2448
     cmd.sm_info24(dev)
     # Generated from packet 2449/2450
+    # bulk2 aggregate: packet W: 2449/2450, 1 to R 2451/2454
     cmd.sm_read(dev)
     # Generated from packet 2455/2456
+    # bulk2 aggregate: packet W: 2455/2456, 1 to R 2457/2458
     buff = cmd.bulk2b(dev, "\x48\x00\x10\x82\x02")
     validate_read("\x82\x00\x10\x01\x09\x00", buff, "packet W: 2455/2456, R 1 to 2457/2458")
     # Generated from packet 2461/2462
     bulkWrite(0x02, "\x20\x01\x00\x50\x7D\x02\x00\x00")
     # Generated from packet 2463/2464
+    # bulk2 aggregate: packet W: 2463/2464, 1 to R 2465/2466
     buff = cmd.bulk2b(dev, bpmicro.pic.pic16f84_fw.p651)
     validate_read("\x82\x00", buff, "packet W: 2463/2464, R 1 to 2465/2466")
     # Generated from packet 2467/2468
+    # bulk2 aggregate: packet W: 2467/2468, 1 to R 2469/2470
     cmd.cmd_02(dev, "\x83\x00\x90\x03\x09\x00")
     # Generated from packet 2471/2472
     bulkWrite(0x02, "\x57\x82\x00\x50\x1D\x00\x00\x00")
     # Generated from packet 2473/2474
+    # bulk2 aggregate: packet W: 2473/2474, 1 to R 2475/2476
     buff = cmd.bulk2b(dev, 
         "\xC7\x05\x74\x46\x00\x00\x0B\x00\x00\x00\xFF\x15\x38\x11\x00\x00" \
         "\x66\xB9\x00\x00\xB2\x00\xFB\xFF\x25\x44\x11\x00\x00"
         )
     validate_read("\x83\x00", buff, "packet W: 2473/2474, R 1 to 2475/2476")
     # Generated from packet 2477/2478
+    # bulk2 aggregate: packet W: 2477/2478, 1 to R 2479/2480
     cmd.cmd_02(dev, "\x84\x00\xB0\x03\x09\x00")
     # Generated from packet 2481/2482
     bulkWrite(0x02, "\x57\x83\x00\x50\x18\x3A\x00\x00")
     # Generated from packet 2483/2484
+    # bulk2 aggregate: packet W: 2483/2484, 1 to R 2485/2486
     buff = cmd.bulk2b(dev, bpmicro.pic.pic16f84_fw.p533)
     validate_read("\x84\x00", buff, "packet W: 2483/2484, R 1 to 2485/2486")
     # Generated from packet 2487/2488
+    # bulk2 aggregate: packet W: 2487/2488, 1 to R 2489/2490
     cmd.cmd_02(dev, "\x85\x00\xD0\x3D\x09\x00")
     # Generated from packet 2491/2492
     bulkWrite(0x02, 
@@ -266,15 +313,19 @@ def dev_read(dev, cont=False, verbose=False):
     # Generated from packet 2493/2494
     cmd.cmd_50(dev, "\xDE\x03")
     # Generated from packet 2495/2496
+    # bulk2 aggregate: packet W: 2495/2496, 1 to R 2497/2498
     buff = cmd.bulk2b(dev, bpmicro.pic.pic16f84_fw.p555)
     validate_read("\x85\x00", buff, "packet W: 2495/2496, R 1 to 2497/2498")
     # Generated from packet 2499/2500
+    # bulk2 aggregate: packet W: 2499/2500, 1 to R 2501/2502
     cmd.cmd_02(dev, "\x86\x00\xB0\x41\x09\x00")
     # Generated from packet 2503/2504
+    # bulk2 aggregate: packet W: 2503/2504, 1 to R 2505/2506
     cmd.cmd_57s(dev, "\x85", "\x01")
     # Generated from packet 2507/2508
     cmd.cmd_50(dev, "\x62\x00")
     # Generated from packet 2509/2510
+    # bulk2 aggregate: packet W: 2509/2510, 1 to R 2511/2512
     buff = cmd.bulk2b(dev, 
         "\x00\x00\x1C\x00\x38\x00\x34\x00\x30\x00\x3D\x00\x39\x00\x35\x00" \
         "\x31\x00\x3E\x00\x00\x00\x36\x00\x32\x00\x3F\x00\x3B\x00\x37\x00" \
@@ -286,6 +337,7 @@ def dev_read(dev, cont=False, verbose=False):
         )
     validate_read("\x86\x00", buff, "packet W: 2509/2510, R 1 to 2511/2512")
     # Generated from packet 2513/2514
+    # bulk2 aggregate: packet W: 2513/2514, 1 to R 2515/2516
     cmd.cmd_02(dev, "\x87\x00\x20\x42\x09\x00")
     # Generated from packet 2517/2518
     bulkWrite(0x02, 
@@ -294,89 +346,99 @@ def dev_read(dev, cont=False, verbose=False):
         "\x00\x50\x71\x09\x00\x00"
         )
     # Generated from packet 2519/2520
-    buff = cmd.bulk2b(dev, pic17c43_fw.p2519)
+    # bulk2 aggregate: packet W: 2519/2520, 1 to R 2521/2522
+    buff = cmd.bulk2b(dev, bpmicro.pic.pic17c43_fw.p2519)
     validate_read("\x87\x00", buff, "packet W: 2519/2520, R 1 to 2521/2522")
     # Generated from packet 2523/2524
+    # bulk2 aggregate: packet W: 2523/2524, 1 to R 2525/2526
     cmd.cmd_02(dev, "\x88\x00\xA0\x4B\x09\x00")
     # Generated from packet 2527/2528
+    # bulk2 aggregate: packet W: 2527/2528, 1 to R 2529/2530
     cmd.cmd_57s(dev, "\x87", "\x00\x00")
     # Generated from packet 2531/2532
     cmd.cmd_50(dev, "\x17\x00")
     # Generated from packet 2533/2534
+    # bulk2 aggregate: packet W: 2533/2534, 1 to R 2535/2536
     buff = cmd.bulk2b(dev, 
         "\xC7\x05\x2C\x00\x09\x00\x24\x04\x00\x00\x66\xB9\x00\x00\xB2\x00" \
         "\xFB\xFF\x25\x44\x11\x00\x00"
         )
     validate_read("\x88\x00", buff, "packet W: 2533/2534, R 1 to 2535/2536")
     # Generated from packet 2537/2538
+    # bulk2 aggregate: packet W: 2537/2538, 1 to R 2539/2540
     cmd.cmd_02(dev, "\x89\x00\xC0\x4B\x09\x00")
     # Generated from packet 2543/2544
     bulkWrite(0x02, "\x57\x88\x00\x50\x18\x00\x00\x00")
     # Generated from packet 2545/2546
+    # bulk2 aggregate: packet W: 2545/2546, 1 to R 2547/2548
     buff = cmd.bulk2b(dev, 
         "\x66\xB8\x01\x32\x66\x89\x05\x06\x00\x09\x00\x66\xB9\x00\x00\xB2" \
         "\x00\xFB\xFF\x25\x44\x11\x00\x00"
         )
     validate_read("\x89\x00", buff, "packet W: 2545/2546, R 1 to 2547/2548")
     # Generated from packet 2549/2550
+    # bulk2 aggregate: packet W: 2549/2550, 1 to R 2551/2552
     cmd.cmd_02(dev, "\x8A\x00\xE0\x4B\x09\x00")
     # Generated from packet 2553/2554
     bulkWrite(0x02, "\x57\x89\x00\x50\x04\x0A\x00\x00")
     # Generated from packet 2555/2556
-    buff = cmd.bulk2b(dev, pic17c43_fw.p2555)
+    # bulk2 aggregate: packet W: 2555/2556, 1 to R 2557/2558
+    buff = cmd.bulk2b(dev, bpmicro.pic.pic17c43_fw.p2555)
     validate_read("\x8A\x00", buff, "packet W: 2555/2556, R 1 to 2557/2558")
     # Generated from packet 2559/2560
+    # bulk2 aggregate: packet W: 2559/2560, 1 to R 2561/2562
     cmd.cmd_02(dev, "\x8B\x00\xF0\x55\x09\x00")
     # Generated from packet 2563/2564
+    # bulk2 aggregate: packet W: 2563/2564, 1 to R 2565/2566
     cmd.cmd_57s(dev, "\x8A", "\x00\x00")
     # Generated from packet 2567/2568
     cmd.cmd_50(dev, "\xBE\x03")
     # Generated from packet 2569/2570
-    buff = cmd.bulk2b(dev, pic17c43_fw.p2569)
+    # bulk2 aggregate: packet W: 2569/2570, 1 to R 2571/2572
+    buff = cmd.bulk2b(dev, bpmicro.pic.pic17c43_fw.p2569)
     validate_read("\x8B\x00", buff, "packet W: 2569/2570, R 1 to 2571/2572")
     # Generated from packet 2573/2574
+    # bulk2 aggregate: packet W: 2573/2574, 1 to R 2575/2576
     cmd.cmd_02(dev, "\x8C\x00\xB0\x59\x09\x00")
-
     # Generated from packet 2577/2578
+    # bulk2 aggregate: packet W: 2577/2578, 1 to R 2581/2582
     buff = cmd.bulk2b(dev, "\x08\x01\x57\x8B\x00")
-    0 and validate_read("\x00\x00", buff, "packet W: 2577/2578, R 1 to 2581/2582")
-
+    validate_read("\x00\x00", buff, "packet W: 2577/2578, R 1 to 2581/2582")
     # Generated from packet 2583/2584
     cmd.cmd_50(dev, "\x1B\x04")
     # Generated from packet 2585/2586
-    buff = cmd.bulk2b(dev, pic17c43_fw.p2585)
+    # bulk2 aggregate: packet W: 2585/2586, 1 to R 2587/2588
+    buff = cmd.bulk2b(dev, bpmicro.pic.pic17c43_fw.p2585)
     validate_read("\x8C\x00", buff, "packet W: 2585/2586, R 1 to 2587/2588")
     # Generated from packet 2589/2590
+    # bulk2 aggregate: packet W: 2589/2590, 1 to R 2591/2592
     cmd.cmd_02(dev, "\x8D\x00\xD0\x5D\x09\x00")
     # Generated from packet 2593/2594
+    # bulk2 aggregate: packet W: 2593/2594, 1 to R 2597/2600
     cmd.cmd_57s(dev, "\x8C", "\x00\x00")
     # Generated from packet 2603/2604
+    # bulk2 aggregate: packet W: 2603/2604, 1 to R 2605/2606
     cmd.cmd_57s(dev, "\x89\x8A", "\x00\x00")
     # Generated from packet 2609/2610
     cmd.cmd_50(dev, "\x12\x03")
     # Generated from packet 2611/2612
-    buff = cmd.bulk2b(dev, pic17c43_fw.p2611)
+    # bulk2 aggregate: packet W: 2611/2612, 1 to R 2613/2614
+    buff = cmd.bulk2b(dev, bpmicro.pic.pic17c43_fw.p2611)
     validate_read("\x8D\x00", buff, "packet W: 2611/2612, R 1 to 2613/2614")
     # Generated from packet 2617/2618
+    # bulk2 aggregate: packet W: 2617/2618, 1 to R 2619/2620
     cmd.cmd_02(dev, "\x8E\x00\xF0\x60\x09\x00")
-
-
-
-
     # Generated from packet 2621/2622
-    code = cmd.bulk2b(dev, 
+    # bulk2 aggregate: packet W: 2621/2622, 17 to R 2681/2682
+    buff = cmd.bulk2b(dev, 
         "\x04\x00\x05\x00\x06\x00\x07\x00\x08\x00\x09\x10\x0A\x00\x0B\x00" \
         "\x57\x8D\x00"
         )
-    #validate_read(pic17c43_fw.p2681, buff, "packet W: 2621/2622, R 17 to 2681/2682")
-
-    return {'code': code, 'data': None, 'config': None}
-
-
-
+    validate_read(bpmicro.pic.pic17c43_fw.p2681, buff, "packet W: 2621/2622, R 17 to 2681/2682")
     # Generated from packet 2683/2684
     cmd.cmd_50(dev, "\x5E\x00")
     # Generated from packet 2685/2686
+    # bulk2 aggregate: packet W: 2685/2686, 1 to R 2687/2688
     buff = cmd.bulk2b(dev, 
         "\x66\xC7\x05\x1C\x24\x00\x00\x00\x00\x66\x8B\x1D\x1C\x24\x00\x00" \
         "\x81\xE3\xFF\xFF\x00\x00\xC1\xE3\x01\x53\x5B\x66\xC7\x83\x38\x24" \
@@ -387,21 +449,27 @@ def dev_read(dev, cont=False, verbose=False):
         )
     validate_read("\x8E\x00", buff, "packet W: 2685/2686, R 1 to 2687/2688")
     # Generated from packet 2689/2690
+    # bulk2 aggregate: packet W: 2689/2690, 1 to R 2691/2692
     cmd.cmd_02(dev, "\x8F\x00\x50\x61\x09\x00")
     # Generated from packet 2693/2694
+    # bulk2 aggregate: packet W: 2693/2694, 1 to R 2695/2696
     cmd.cmd_57s(dev, "\x8E", "\x00\x00")
     # Generated from packet 2697/2698
     cmd.cmd_50(dev, "\x96\x06")
     # Generated from packet 2699/2700
-    buff = cmd.bulk2b(dev, pic17c43_fw.p2699)
+    # bulk2 aggregate: packet W: 2699/2700, 1 to R 2701/2702
+    buff = cmd.bulk2b(dev, bpmicro.pic.pic17c43_fw.p2699)
     validate_read("\x8F\x00", buff, "packet W: 2699/2700, R 1 to 2701/2702")
     # Generated from packet 2703/2704
+    # bulk2 aggregate: packet W: 2703/2704, 1 to R 2705/2706
     cmd.cmd_02(dev, "\x90\x00\xF0\x67\x09\x00")
     # Generated from packet 2707/2708
+    # bulk2 aggregate: packet W: 2707/2708, 1 to R 2709/2710
     cmd.cmd_57s(dev, "\x8F", "\x00\x00")
     # Generated from packet 2711/2712
     cmd.cmd_50(dev, "\x92\x00")
     # Generated from packet 2713/2714
+    # bulk2 aggregate: packet W: 2713/2714, 1 to R 2715/2716
     buff = cmd.bulk2b(dev, 
         "\xE9\x03\x00\x00\x00\x90\x00\x00\x66\xC7\x05\xF6\x67\x09\x00\x00" \
         "\x00\x66\x8B\x05\xF6\x67\x09\x00\x81\xE0\xFF\xFF\x00\x00\xFF\xF0" \
@@ -416,52 +484,73 @@ def dev_read(dev, cont=False, verbose=False):
         )
     validate_read("\x90\x00", buff, "packet W: 2713/2714, R 1 to 2715/2716")
     # Generated from packet 2717/2718
+    # bulk2 aggregate: packet W: 2717/2718, 1 to R 2719/2720
     cmd.cmd_02(dev, "\x91\x00\x90\x68\x09\x00")
     # Generated from packet 2721/2722
+    # bulk2 aggregate: packet W: 2721/2722, 1 to R 2723/2724
     cmd.cmd_57s(dev, "\x90", "\xFF\xFF")
     # Generated from packet 2725/2726
+    # bulk2 aggregate: packet W: 2725/2726, 1 to R 2727/2728
     cmd.cmd_57s(dev, "\x8C", "\x00\x00")
     # Generated from packet 2729/2730
     cmd.cmd_50(dev, "\x0D\x00")
     # Generated from packet 2731/2732
+    # bulk2 aggregate: packet W: 2731/2732, 1 to R 2733/2734
     buff = cmd.bulk2b(dev, "\x66\xB9\x00\x00\xB2\x00\xFB\xFF\x25\x44\x11\x00\x00")
     validate_read("\x91\x00", buff, "packet W: 2731/2732, R 1 to 2733/2734")
     # Generated from packet 2735/2736
+    # bulk2 aggregate: packet W: 2735/2736, 1 to R 2737/2738
     cmd.cmd_02(dev, "\x92\x00\xA0\x68\x09\x00")
     # Generated from packet 2739/2740
     bulkWrite(0x02, "\x57\x91\x00\x50\x1A\x00\x00\x00")
     # Generated from packet 2741/2742
+    # bulk2 aggregate: packet W: 2741/2742, 1 to R 2743/2744
     buff = cmd.bulk2b(dev, 
         "\x66\xB9\x00\x00\xB2\x02\xFB\xFF\x25\x44\x11\x00\x00\x66\xB9\x00" \
         "\x00\xB2\x02\xFB\xFF\x25\x44\x11\x00\x00"
         )
     validate_read("\x92\x00", buff, "packet W: 2741/2742, R 1 to 2743/2744")
     # Generated from packet 2745/2746
+    # bulk2 aggregate: packet W: 2745/2746, 1 to R 2747/2748
     cmd.cmd_02(dev, "\x93\x00\xC0\x68\x09\x00")
     # Generated from packet 2749/2750
+    # bulk2 aggregate: packet W: 2749/2750, 1 to R 2751/2752
     cmd.cmd_57s(dev, "\x92", "\x00\x00")
     # Generated from packet 2753/2754
+    # bulk2 aggregate: packet W: 2753/2754, 1 to R 2755/2756
     cmd.led_mask(dev, "pass")
     # Generated from packet 2757/2758
+    # bulk2 aggregate: packet W: 2757/2758, 1 to R 2759/2760
     cmd.gpio_readi(dev)
     # Generated from packet 2761/2762
+    # bulk2 aggregate: packet W: 2761/2762, 1 to R 2763/2764
     cmd.gpio_readi(dev)
     # Generated from packet 2765/2766
+    # bulk2 aggregate: packet W: 2765/2766, 1 to R 2767/2768
     cmd.sm_info22(dev)
     # Generated from packet 2769/2770
+    # bulk2 aggregate: packet W: 2769/2770, 1 to R 2771/2772
     cmd.sm_info24(dev)
     # Generated from packet 2773/2774
+    # bulk2 aggregate: packet W: 2773/2774, 1 to R 2775/2776
     cmd.sm_read(dev)
     # Generated from packet 2777/2778
+    # bulk2 aggregate: packet W: 2777/2778, 1 to R 2779/2780
     cmd.cmd_49(dev)
     # Generated from packet 2781/2782
+    # bulk2 aggregate: packet W: 2781/2782, 1 to R 2783/2784
     cmd.sm_read(dev)
     # Generated from packet 2785/2786
+    # bulk2 aggregate: packet W: 2785/2786, 1 to R 2787/2788
     cmd.sm_insert(dev)
     # Generated from packet 2789/2790
+    # bulk2 aggregate: packet W: 2789/2790, 1 to R 2791/2792
     cmd.sm_info10(dev)
 
-    return {'code': code, 'data': None, 'config': None}
+
+
+
+    return {'code': None, 'data': None, 'config': None}
 
 
 
@@ -522,3 +611,5 @@ class PIC17C43(bpmicro.device.Device):
             print '  user_id%d:  0x%04X' % (i, config['user_id%d' % i])
         #print '  conf_word: 0x%04X' % (config['conf_word'])
         print '  secure: %s' % (config['secure'])
+
+
