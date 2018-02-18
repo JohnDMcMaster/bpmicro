@@ -379,12 +379,13 @@ def dev_read(dev, cont=False, verbose=False):
     # Generated from packet 2041/2042
     # "\xFF\x3F \xFF\x3F \xFF\x3F \xFF\x3F \x03\x00 \x01\x00 \x01\x00"
     buff = cmd.cmd_57s(dev, "\x91", None)
-    def fusepack(buff, i):
+    def fuse_unpack(buff, i):
         return struct.unpack('<H', buff[2*i:2*i+2])[0]
     for i in xrange(0, 4):
-        config['user_id%d' % i] = fusepack(buff, i)
+        config['user_id%d' % i] = fuse_unpack(buff, i)
     # FIXME: confirm
-    config['conf_word'] = fusepack(buff, 4)
+    # Think this is actually incorrect
+    config['conf_word'] = fuse_unpack(buff, 4)
     #print binascii.hexlify(buff)
 
 

@@ -5,12 +5,15 @@ from bpmicro import cmd
 from bpmicro.usb import validate_read
 from bpmicro.usb import usb_wraps
 import bpmicro.device
+import struct
+import binascii
 
 import bpmicro.pic.pic16f84_fw
 import bpmicro.pic.pic17c43_fw
 
 def dev_read(dev, cont=False, verbose=False):
     bulkRead, bulkWrite, controlRead, controlWrite = usb_wraps(dev)
+    config = {}
 
     # Generated from packet 2237/2238
     # NOTE:: req max 4096 but got 3
@@ -196,7 +199,7 @@ def dev_read(dev, cont=False, verbose=False):
     if cont:
         # Generated from packet 2503/2504
         # bulk2 aggregate: packet W: 2503/2504, 1 to R 2505/2506
-        cmd.cmd_57s(dev, "\x85", "\x01")
+        cmd.check_cont(dev)
 
     # Generated from packet 2507/2508
     cmd.cmd_50(dev, "\x62\x00")
@@ -276,10 +279,13 @@ def dev_read(dev, cont=False, verbose=False):
     # Generated from packet 2573/2574
     # bulk2 aggregate: packet W: 2573/2574, 1 to R 2575/2576
     cmd.cmd_02(dev, "\x8C\x00\xB0\x59\x09\x00")
+
     # Generated from packet 2577/2578
     # bulk2 aggregate: packet W: 2577/2578, 1 to R 2581/2582
     buff = cmd.bulk2b(dev, "\x08\x01\x57\x8B\x00")
-    validate_read("\x00\x00", buff, "packet W: 2577/2578, R 1 to 2581/2582")
+    #validate_read("\x00\x00", buff, "packet W: 2577/2578, R 1 to 2581/2582")
+    config['secure'] = buff != '\x00\x00'
+
     # Generated from packet 2583/2584
     cmd.cmd_50(dev, "\x1B\x04")
     # Generated from packet 2585/2586
@@ -306,7 +312,7 @@ def dev_read(dev, cont=False, verbose=False):
     cmd.cmd_02(dev, "\x8E\x00\xF0\x60\x09\x00")
     # Generated from packet 2621/2622
     # bulk2 aggregate: packet W: 2621/2622, 17 to R 2681/2682
-    code = cmd.bulk2b(dev, 
+    main_read = cmd.bulk2b(dev, 
         "\x04\x00\x05\x00\x06\x00\x07\x00\x08\x00\x09\x10\x0A\x00\x0B\x00" \
         "\x57\x8D\x00"
         )
@@ -362,12 +368,23 @@ def dev_read(dev, cont=False, verbose=False):
     # Generated from packet 2717/2718
     # bulk2 aggregate: packet W: 2717/2718, 1 to R 2719/2720
     cmd.cmd_02(dev, "\x91\x00\x90\x68\x09\x00")
+
     # Generated from packet 2721/2722
     # bulk2 aggregate: packet W: 2721/2722, 1 to R 2723/2724
-    cmd.cmd_57s(dev, "\x90", "\xFF\xFF")
+    # Orig: "\xFF\xFF"
+    buff = cmd.cmd_57s(dev, "\x90", None)
+    def unpackw(buff):
+        struct.unpack('<H', buff)[0]
+    if verbose:
+        print '2721/2722: %s' % binascii.hexlify(buff)
+
+    # FIXME: confirm
+    config['conf_word'] = unpackw(buff)
+
     # Generated from packet 2725/2726
     # bulk2 aggregate: packet W: 2725/2726, 1 to R 2727/2728
     cmd.cmd_57s(dev, "\x8C", "\x00\x00")
+
     # Generated from packet 2729/2730
     cmd.cmd_50(dev, "\x0D\x00")
     # Generated from packet 2731/2732
@@ -399,7 +416,19 @@ def dev_read(dev, cont=False, verbose=False):
     # bulk2 aggregate: packet W: 2777/2778, 1 to R 2779/2780
     cmd.cmd_49(dev)
 
-    return {'code': code, 'data': None, 'config': None}
+    # Is it the full area or just the first half?
+    # Ambiguous word vs byte
+    # looks like upper memory has misc internal chip data
+    # Fairly certain we just want this
+    code = main_read[0:4 * 1024]
+    #code = main_read
+    fuses_buff = main_read[0x1FF0:0x2000]
+    def fuse_unpack(buff, i):
+        return struct.unpack('<H', buff[2*i:2*i+2])[0]
+    for i in xrange(0, 4):
+        config['user_id%d' % i] = fuse_unpack(fuses_buff, i)
+
+    return {'code': code, 'config': config}
 
 class PIC17C43(bpmicro.device.Device):
     def __init__(self, dev, verbose=False):
