@@ -35,17 +35,21 @@ def dev_read(dev, cont=False, verbose=False):
         "\x00\xFE\xFF\x00"
         )
     validate_read("\xA4\x06", buff, "packet W: 309/310, R 1 to 311/312")
-    # NOTE:: req max 512 but got 35
-    # Generated from packet 321/322
-    # bulk2 aggregate: packet W: 321/322, 1 to R 323/324
-    buff = cmd.bulk2b(dev, 
-        "\x14\x38\x25\x00\x00\x04\x00\x90\x32\x90\x00\xA7\x02\x1F\x00\x14" \
-        "\x40\x25\x00\x00\x01\x00\x3C\x36\x0E\x01"
-        )
-    validate_read(
-        "\x14\x00\x54\x41\x38\x34\x56\x4C\x56\x5F\x46\x58\x34\x00\x00\x00" \
-        "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x3E\x2C"
-        , buff, "packet W: 321/322, R 1 to 323/324")
+
+    # tech adapter read
+    if 0:
+        # NOTE:: req max 512 but got 35
+        # Generated from packet 321/322
+        # bulk2 aggregate: packet W: 321/322, 1 to R 323/324
+        buff = cmd.bulk2b(dev, 
+            "\x14\x38\x25\x00\x00\x04\x00\x90\x32\x90\x00\xA7\x02\x1F\x00\x14" \
+            "\x40\x25\x00\x00\x01\x00\x3C\x36\x0E\x01"
+            )
+        validate_read(
+            "\x14\x00\x54\x41\x38\x34\x56\x4C\x56\x5F\x46\x58\x34\x00\x00\x00" \
+            "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x3E\x2C"
+            , buff, "packet W: 321/322, R 1 to 323/324")
+
     # NOTE:: req max 512 but got 136
     # Generated from packet 349/350
     bulkWrite(0x02, "\x43\x19\x04\x00\x00")
@@ -399,7 +403,7 @@ def dev_read(dev, cont=False, verbose=False):
     #cmd.cmd_57s(dev, "\x91", "\x00\x04\x02\x04\x04\x04\x06\x04\x03\x00\x01\x00\x01\x00")
     buff = cmd.cmd_57s(dev, "\x91", None)
     def fuse_unpack(buff, i):
-        return struct.unpack('<H', buff[2*i:2*i+2])[0]
+        return struct.unpack('<H', str(buff[2*i:2*i+2]))[0]
     for i in xrange(0, 4):
         config['user_id%d' % i] = fuse_unpack(buff, i)
     config['misc'] = binascii.hexlify(buff[8:])
