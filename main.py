@@ -2,6 +2,9 @@ from bpmicro import startup
 from bpmicro import devices
 from bpmicro.util import hexdump, add_bool_arg
 
+import json
+import os
+
 def run(operation, device,
         code_fn, data_fn, config_fn,
         cont, erase, verify, verbose, dir_, init=True):
@@ -47,23 +50,27 @@ def run(operation, device,
         data = devcfg.get('data', None)
         config = devcfg.get('config', None)
         if not code_fn:
-            if dir_:
-                raise Exception('FIXME')
-            else:
+            print
+            hexdump(code, indent='  ', label='Code')
+
+            if data:
                 print
-                hexdump(code, indent='  ', label='Code')
-    
-                if data:
-                    print
-                    hexdump(data, indent='  ', label='Data')
-    
-                if config:
-                    print
-                    print 'Configuration'
-                    device.print_config(config)
+                hexdump(data, indent='  ', label='Data')
+
+            if config:
+                print
+                print 'Configuration'
+                device.print_config(config)
         else:
-            print 'Writing to %s' % code_fn
-            open(code_fn, 'w').write(code)
+            if dir_:
+                if not os.path.exists(code_fn):
+                    os.mkdir(code_fn)
+                open(os.path.join(code_fn, 'code.bin'), 'w').write(code)
+                open(os.path.join(code_fn, 'data.bin'), 'w').write(data)
+                open(os.path.join(code_fn, 'config.json'), 'w').write(json.dumps(config))
+            else:
+                print 'Writing to %s' % code_fn
+                open(code_fn, 'w').write(code)
     
         print 'Complete'
     elif operation == 'sum':

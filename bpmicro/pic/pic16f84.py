@@ -56,7 +56,9 @@ def dev_read(dev, cont=False, verbose=False):
     #cmd.cmd_01(dev)
     # NOTE:: req max 512 but got 136
     # Generated from packet 1651/1652
-    buff = cmd.bulk2b(dev, 
+    # reliability issues
+    #buff = cmd.bulk2b(dev, 
+    buff = cmd.bulk2(dev, target=2, cmd=\
         "\x43\x19\x08\x00\x00\x3B\x7E\x25\x00\x00\xFE\xFF\x3B\x7C\x25\x00" \
         "\x00\xFE\xFF\x00"
         )
@@ -380,7 +382,7 @@ def dev_read(dev, cont=False, verbose=False):
     # "\xFF\x3F \xFF\x3F \xFF\x3F \xFF\x3F \x03\x00 \x01\x00 \x01\x00"
     buff = cmd.cmd_57s(dev, "\x91", None)
     def fuse_unpack(buff, i):
-        return struct.unpack('<H', buff[2*i:2*i+2])[0]
+        return struct.unpack('<H', str(buff[2*i:2*i+2]))[0]
     for i in xrange(0, 4):
         config['user_id%d' % i] = fuse_unpack(buff, i)
     # FIXME: confirm
