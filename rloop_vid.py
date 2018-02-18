@@ -1,4 +1,3 @@
-from uvscada.util import hexdump, add_bool_arg
 import os
 import sys
 import time

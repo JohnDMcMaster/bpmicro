@@ -2,9 +2,9 @@
 Functionality based on bulk 0x02 write + optional bulk 0x86 read 
 '''
 
-from uvscada.usb import usb_wraps
-from uvscada.usb import validate_read, validate_readv
-from uvscada.util import hexdump, where
+from bpmicro.usb import usb_wraps
+from bpmicro.usb import validate_read, validate_readv
+from bpmicro.util import hexdump, where
 
 import binascii
 import struct

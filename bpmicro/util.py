@@ -162,3 +162,4 @@ class IOLog(object):
     def write(self, data):
         self.fd.write(data)
         self.out_fd.write(data)
+

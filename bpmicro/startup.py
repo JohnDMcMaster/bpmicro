@@ -1,29 +1,14 @@
 # Atomic: indicates commands must be executed in sequence
 # trying to insert debugging commands likecmd.cmd_01() fail
         
-from bpmicro.usb import usb_wraps
-from bpmicro.usb import validate_read
-from bpmicro.bp1410_fw import load_fx2
-from bpmicro import bp1410_fw_sn
-from bpmicro.bp1410 import BP1410
-
-#from cmd import *
+from bp1410_fw import load_fx2
+import bp1410_fw_sn
+from bp1410 import BP1410
 import cmd
+from usb import usb_wraps
+from usb import validate_read
 
-import time
 import usb1
-
-def cycle():
-    '''Power cycle. Hack to reset state during development'''
-
-    from uvscada.wps7 import WPS7
-
-    print 'Cycling'
-    wps = WPS7(host='raijin')
-    wps.cycle([1, 2], t=2.0)
-    # 1 second too short
-    time.sleep(3)
-    print 'Cycled'
 
 def boot_cold(dev):
     bulkRead, bulkWrite, controlRead, _controlWrite = usb_wraps(dev)

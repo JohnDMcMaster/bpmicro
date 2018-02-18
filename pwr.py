@@ -4,12 +4,10 @@ import usb1
 import sys
 import struct
 
-from uvscada.wps7 import WPS7
-
 from bpmicro.usb import usb_wraps
 from bpmicro.bp1410_fw import load_fx2
 from bpmicro import bp1410_fw_sn, startup
-from bpmicro.startup import bulk2, bulk86, sm_read, gpio_readi, led_mask
+from bpmicro.cmd import bulk2, bulk86, sm_read, gpio_readi, led_mask
 from bpmicro.util import hexdump, add_bool_arg
 from bpmicro.util import str2hex
 from bpmicro.usb import validate_read, validate_readv
@@ -378,19 +376,11 @@ if __name__ == "__main__":
     add_bool_arg(parser, '--cycle', default=False, help='') 
     args = parser.parse_args()
 
-    if args.cycle:
-        print 'Cycling'
-        wps = WPS7(host='raijin')
-        wps.cycle([1, 2], t=2.0)
-        # 1 second too short
-        time.sleep(3)
-        print 'Cycled'
-
     usbcontext = usb1.USBContext()
     dev = open_dev(usbcontext)
     dev.claimInterface(0)
     #dev.resetDevice()
-    startup.replay(dev)
+    startup.init_dev(dev)
 
     print
     print

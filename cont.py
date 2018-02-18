@@ -1,3 +1,5 @@
+'''Continuity test'''
+
 import binascii
 import time
 import usb1
@@ -5,15 +7,11 @@ import libusb1
 import sys
 import struct
 
-from uvscada.wps7 import WPS7
-
-from uvscada.bpm import cmd
-from uvscada.bpm import startup
-from uvscada.bpm.startup import led_mask
-from uvscada.util import hexdump, add_bool_arg
-from uvscada.bpm.cmd import *
-from uvscada.bpm.i87c51 import read_fw
-from uvscada.util import str2hex
+from bpmicro.cmd import *
+from bpmicro.mcs51 import i87c51_fw
+from bpmicro.util import hexdump, add_bool_arg
+from bpmicro.util import str2hex
+from bpmicro import startup
 import subprocess
 
 def replay(dev):
@@ -204,7 +202,7 @@ def replay(dev):
     bulkWrite(0x02, cmd_20_mk() + cmd_50_mk("\x7D\x02"))
     
     # Generated from packet 201/202
-    buff = bulk2(dev, read_fw.p201, target=0x02, truncate=True)
+    buff = bulk2(dev, i87c51_fw.p201, target=0x02, truncate=True)
     # Discarded 510 / 512 bytes => 2 bytes
     validate_read("\x82\x00", buff, "packet W: 201/202, R: 203/204")
 
@@ -235,7 +233,7 @@ def replay(dev):
     
     # p221.bin: DOS executable (COM)
     # Generated from packet 221/222
-    buff = bulk2(dev, read_fw.p221, target=0x02, truncate=True)
+    buff = bulk2(dev, i87c51_fw.p221, target=0x02, truncate=True)
     # Discarded 510 / 512 bytes => 2 bytes
     validate_read("\x84\x00", buff, "packet W: 221/222, R: 223/224")
 
@@ -254,7 +252,7 @@ def replay(dev):
     cmd_50(dev, "\xDE\x03")
 
     # Generated from packet 233/234
-    buff = bulk2(dev, read_fw.p233, target=0x02, truncate=True)
+    buff = bulk2(dev, i87c51_fw.p233, target=0x02, truncate=True)
     # Discarded 510 / 512 bytes => 2 bytes
     validate_read("\x85\x00", buff, "packet W: 233/234, R: 235/236")
 
@@ -270,11 +268,7 @@ if __name__ == "__main__":
     import argparse 
     
     parser = argparse.ArgumentParser(description='Replay captured USB packets')
-    add_bool_arg(parser, '--cycle', default=False, help='') 
     args = parser.parse_args()
-
-    if args.cycle:
-        startup.cycle()
 
     dev, usbcontext = startup.get()
     _bulkRead, bulkWrite, controlRead, controlWrite = usb_wraps(dev)

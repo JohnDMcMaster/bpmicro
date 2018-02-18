@@ -1,7 +1,6 @@
 import time
-import libusb1
 import bp1410_fw_fx2
-from uvscada.usb import usb_wraps
+from bpmicro.usb import usb_wraps
 
 def load_fx2(dev):
     _bulkRead, _bulkWrite, _controlRead, controlWrite = usb_wraps(dev)

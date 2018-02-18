@@ -1,11 +1,11 @@
-from uvscada.util import str2hex
+from bpmicro.util import str2hex
 
 import json
 import binascii
 import subprocess
 
 from bpmicro.cmd import led_i2s
-from uvscada.util import hexdump
+from bpmicro.util import hexdump
 from bpmicro.util import add_bool_arg
 
 fw_mods = {}
