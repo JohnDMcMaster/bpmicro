@@ -28,6 +28,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Dump device data')
     util.add_bool_arg(parser, '--verbose', default=True, help='Print hex dumps')
     util.add_bool_arg(parser, '--save', default=True, help='Save dump')
+    util.add_bool_arg(parser, '--sm', default=False, help='Only dump socket module')
+    util.add_bool_arg(parser, '--bp', default=False, help='Only dump socket module')
     parser.add_argument('dout', nargs='?', default=None, help='File out')
     args = parser.parse_args()
 
@@ -74,7 +76,8 @@ if __name__ == "__main__":
 
         sm_eeprom = cmd.sm_r(bp.dev, 0x00, 0x3F)
         sm = cmd.sm_decode(sm_eeprom)
-        cmd.print_mkstruct(sm, filter=lambda k, v: 'pad' not in k and 'unk' not in k)
+        #sm_dout = auto_dir('dump', 'sm_', args.dout)
+        util.print_mkstruct(sm, filter=lambda k, v: 'pad' not in k and 'unk' not in k)
 
         if args.verbose:
             util.hexdump(sm_eeprom)
@@ -94,7 +97,8 @@ if __name__ == "__main__":
     print
     print 'Technology adapter (TA)'
     ta_eeprom = cmd.ta_r(bp.dev, 0x00, 0x3F)
+    ta = cmd.ta_decode(ta_eeprom)
     if args.verbose:
         util.hexdump(ta_eeprom)
     if args.save:
-        open(os.path.join(dout, 'ta_eeprom.bin'), 'w').write(ta_eeprom)
+        open(os.path.join(dout, 'ta_eeprom_%s.bin' % ta.name), 'w').write(ta_eeprom)

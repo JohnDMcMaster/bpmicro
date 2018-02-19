@@ -5,12 +5,13 @@ Functionality based on bulk 0x02 write + optional bulk 0x86 read
 from bpmicro.usb import usb_wraps
 from bpmicro.usb import validate_read, validate_readv
 from bpmicro.util import hexdump, where
+from bpmicro import util
 
 import binascii
 import struct
-from collections import namedtuple
 import libusb1
 import time
+from collections import namedtuple
 
 bulk86_dbg = 0
 splits = [0]
@@ -149,8 +150,6 @@ def bulk2(dev, cmd, target=None, donef=None, prefix=None):
     bulkWrite(0x02, cmd)
     return bulk86(dev, target=target, donef=donef, prefix=prefix)
 
-
-
 def bulk86_next_read(dev):
     bulkRead, _bulkWrite, _controlRead, _controlWrite = usb_wraps(dev)
     '''
@@ -187,6 +186,24 @@ def bulk2b(dev, cmd):
         if size < 0x1fd:
             break
     return ret
+
+# 0x40 words
+SM_FMT, SM =  util.mkstruct('SM', (
+        # namei is referenced by the diagnostics, printed in hex (but as LE)
+        'unk00', 'H', 'name', '12s', 'namei', 'I',
+        'unk12', 'H', 'unk14', 'H', 'unk16', 'H', 'unk18', 'H', 'unk1A', 'H', 'unk1C', 'H', 'unk1E', 'H',
+        'ins_all', 'H', 'pad22', 'H', 'ins_last', 'H', 'unk26', 'H', 'pad28', '28s',
+        'unk44', 'H', 'unk46', 'H', 'unk48', 'H', 'pad4A', 'H', 'pad4C', '4s',
+        'unk50', 'H', 'unk52', 'H', 'pad54', '44s'
+        ), 0x80)
+
+SM2_FMT = '<HHHHHH'
+
+def sm_decode(buff):
+    up = list(struct.unpack(SM_FMT, buff))
+    # Remove string padding
+    up[1] = up[1].replace('\x00', '')
+    return SM(*up)
 
 # Read data structure containing serial number
 # Other than that bit, meaning is unknown
@@ -227,51 +244,17 @@ def sm_r(dev, start=0, end=0x3F):
     # bulk2(dev, "\x22\x02" + chr(start) + "\x00" + chr(end) + "\x00\x06"
     return periph_r(dev, 0x02, start, end)
 
-def mkstruct(name, encoding, size=None):
-    if len(encoding) % 2 != 0:
-        raise Exception('Need even number of elements')
-    fmts = '<'
-    names = []
-    for i in xrange(0, len(encoding), 2):
-        fname, fmt = encoding[i:i+2]
-        names.append(fname)
-        fmts += fmt
-    calc = struct.calcsize(fmts)
-    if size and size != calc:
-        raise Exception("Expect size %d (0x%02X), got %d (0x%02X)" % (size, size, calc, calc))
-    return fmts, namedtuple(name, names)
-
-def print_mkstruct(sm, filter=None):
-    '''
-    for k, v in sm._asdict().iteritems():
-        if 'pad' not in k:
-            print 'print "  %s: %%d" %% sm.%s' % (k, k)
-    '''
-    for k, v in sm._asdict().iteritems():
-        if not filter or filter(k, v):
-            if type(k) in (str, unicode):
-                print "  %s: %s" % (k, v)
-            else:
-                print "  %s: %d" % (k, v)
-
-
 # 0x40 words
-SM_FMT, SM =  mkstruct('sm', (
+TA_FMT, TA =  util.mkstruct('TA', (
         # namei is referenced by the diagnostics, printed in hex (but as LE)
-        'unk00', 'H', 'name', '12s', 'namei', 'I',
-        'unk12', 'H', 'unk14', 'H', 'unk16', 'H', 'unk18', 'H', 'unk1A', 'H', 'unk1C', 'H', 'unk1E', 'H',
-        'ins_all', 'H', 'pad22', 'H', 'ins_last', 'H', 'unk26', 'H', 'pad28', '28s',
-        'unk44', 'H', 'unk46', 'H', 'unk48', 'H', 'pad4A', 'H', 'pad4C', '4s',
-        'unk50', 'H', 'unk52', 'H', 'pad54', '44s'
+        'unk00', 'H', 'name', '12s', 'pad', '16s',
+        'unk1E', 'H', 'unk20', 'H', 'pad22', '94s'
         ), 0x80)
-
-SM2_FMT = '<HHHHHH'
-
-def sm_decode(buff):
-    up = list(struct.unpack(SM_FMT, buff))
+def ta_decode(buff):
+    up = list(struct.unpack(TA_FMT, buff))
     # Remove string padding
     up[1] = up[1].replace('\x00', '')
-    return SM(*up)
+    return TA(*up)
 
 '''
 ********************************************************************************

@@ -3,6 +3,8 @@ import inspect
 import os
 import shutil
 import sys
+import struct
+from collections import namedtuple
 
 def print_debug(s = None):
     if False:
@@ -162,4 +164,31 @@ class IOLog(object):
     def write(self, data):
         self.fd.write(data)
         self.out_fd.write(data)
+
+def mkstruct(name, encoding, size=None):
+    if len(encoding) % 2 != 0:
+        raise Exception('Need even number of elements')
+    fmts = '<'
+    names = []
+    for i in xrange(0, len(encoding), 2):
+        fname, fmt = encoding[i:i+2]
+        names.append(fname)
+        fmts += fmt
+    calc = struct.calcsize(fmts)
+    if size and size != calc:
+        raise Exception("Expect size %d (0x%02X), got %d (0x%02X)" % (size, size, calc, calc))
+    return fmts, namedtuple(name, names)
+
+def print_mkstruct(sm, filter=None):
+    '''
+    for k, v in sm._asdict().iteritems():
+        if 'pad' not in k:
+            print 'print "  %s: %%d" %% sm.%s' % (k, k)
+    '''
+    for k, v in sm._asdict().iteritems():
+        if not filter or filter(k, v):
+            if type(k) in (str, unicode):
+                print "  %s: %s" % (k, v)
+            else:
+                print "  %s: %d" % (k, v)
 
