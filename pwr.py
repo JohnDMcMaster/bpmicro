@@ -7,7 +7,7 @@ import struct
 from bpmicro.usb import usb_wraps
 from bpmicro.bp1410_fw import load_fx2
 from bpmicro import bp1410_fw_sn, startup
-from bpmicro.cmd import bulk2, bulk86, sm_read, gpio_readi, led_mask
+from bpmicro.cmd import bulk2, bulk86, sm_info3, gpio_readi, led_mask
 from bpmicro.util import hexdump, add_bool_arg
 from bpmicro.util import str2hex
 from bpmicro.usb import validate_read, validate_readv
@@ -125,7 +125,7 @@ def replay_setup(dev):
 
     
     # Generated from packet 313/314
-    sm_read(dev)
+    sm_info3(dev)
     
     # Generated from packet 317/318
     buff = bulk2(dev, "\x01", target=0x85)
@@ -198,7 +198,7 @@ def replay_setup(dev):
     '''
 
     # Generated from packet 347/348
-    sm_read(dev)
+    sm_info3(dev)
     
     # Generated from packet 351/352
     bulkWrite(0x02, "\x3B\x0C\x22\x00\xC0\x40\x00\x3B\x0E\x22\x00\xC0\x00\x00\x3B\x1A"
@@ -283,7 +283,7 @@ def replay_setup(dev):
 
     
     # Generated from packet 397/398
-    sm_read(dev)
+    sm_info3(dev)
     
     # Generated from packet 401/402
     bulkWrite(0x02, "\x48\x00\x20\x00\x00\x50\x12\x00\x00\x00")

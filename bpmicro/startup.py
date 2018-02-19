@@ -181,7 +181,7 @@ def init_dev(dev, verbose=False):
     #cmd.gpio_readi(dev)
     
     # Generated from packet 134/135
-    #cmd.sm_read(dev)
+    #cmd.sm_info3(dev)
     
     # Generated from packet 138/139
     #cmd.cmd_01(dev)
@@ -221,7 +221,7 @@ def init_dev(dev, verbose=False):
     #cmd.gpio_readi(dev)
 
     # Generated from packet 168/169
-    #cmd.sm_read(dev)
+    #cmd.sm_info3(dev)
 
     # Generated from packet 172/173
     bulkWrite(0x02, "\x3B\x0C\x22\x00\xC0\x30\x00\x3B\x0E\x22\x00\xC0\x00\x00\x3B\x1A"
@@ -312,7 +312,7 @@ def init_dev(dev, verbose=False):
     #cmd.gpio_readi(dev)
 
     # Generated from packet 218/219
-    #cmd.sm_read(dev)
+    #cmd.sm_info3(dev)
     
     # Atomic
     #cmd.cmd_01 state: 0x82 => 0x83

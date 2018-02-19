@@ -188,76 +188,21 @@ def bulk2b(dev, cmd):
             break
     return ret
 
-def sn_read(dev):
-    # Generated from packet 118/119
-    buff = bulk2(dev, "\x0E\x00", target=0x20)
-    validate_read(
-            "\x3A\x00\x90\x32\xA7\x02\x2A\x86\x01\x95\x3C\x36\x90\x00\x1F"
-            "\x00\x01\x00\xD6\x05\x01\x00\x72\x24\x22\x39\x00\x00\x00\x00\x27"
-            "\x1F",
-            buff, "packet 120/121")
-    sn = buff[6:8]
-    print 'S/N: %s' % binascii.hexlify(sn)
-
-SM1_FMT = '<H12s18s'
-SM1 = namedtuple('sm', ('unk0', 'name', 'unk12'))
-
-def sm_read(dev):
-    buff = bulk2(dev, "\x0E\x02", target=0x20)
-    validate_readv((
-              "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF"
-              "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF"
-              "\xFF",
-              
-              # Socket module
-              # 00000000  11 00 53 4D 34 38 44 00  00 00 00 00 00 00 5D F4  |..SM48D.......].|
-              # 00000010  39 FF 00 00 00 00 00 00  00 00 00 00 00 00 62 6C  |9.............bl|
-              "\x11\x00\x53\x4D\x34\x38\x44\x00\x00\x00\x00\x00\x00\x00\x5D\xF4" \
-              "\x39\xFF\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x62\x6C",
-              ),
-              buff, "packet 136/137")
-    # Don't throw exception on no SM for now?)
-    # since it will break other code
-    if buff == '\xFF' * 32:
-        return None
-    
-    up = list(struct.unpack(SM1_FMT, buff))
-    up[1] = up[1].replace('\x00', '')
-    return SM1(*up)
-
-def sm_info0(dev):
-    # Generated from packet 3/4
-    gpio_readi(dev)
-    
-    # Generated from packet 7/8
-    gpio_readi(dev)
-
-    # Generated from packet 11/12
-    sm_info22(dev)
-    
-    # Generated from packet 15/16
-    sm_info24(dev)
-    
-    # Generated from packet 19/20
-    sm_read(dev)
-
-def sm_info1(dev):
-    sm_info0(dev)
-    
-    # Generated from packet 23/24
-    cmd_49(dev)
-    
-    # Generated from packet 27/28
-    sm = sm_read(dev)
-    print 'Name: %s' % sm.name
+# Read data structure containing serial number
+# Other than that bit, meaning is unknown
+def sn_r(dev):
+    return bulk2(dev, "\x0E\x00", target=0x20)
 
 # Possibly I2C traffic
 # Addresses are inclusive
+# Addresses in 16 bit words
 def periph_r(dev, periph, start, end):
     if not (0 <= start <= 0x40):
         raise Exception("Bad start")
-    if not (0 <= start <= 0x40):
+    if not (0 <= end <= 0x40):
         raise Exception("Bad end")
+    if start > end:
+        raise Exception("Bad start/end")
     words = end - start + 1
     if words < 0:
         raise Exception("Bad start-end")
@@ -273,20 +218,136 @@ def periph_r(dev, periph, start, end):
                 target=(words*2))
 
 # Teach adapter (ex: TA84VLV_FX4) EEPROM
-def ta_r(dev, start, end):
+def ta_r(dev, start=0, end=0x3F):
     # bulk2(dev, "\x22\x01" + chr(start) + "\x00" + chr(end) + "\x00\x06"
     return periph_r(dev, 0x01, start, end)
 
 # Read socket module (ex: SM84) EEPROM
-def sm_r(dev, start, end):
+def sm_r(dev, start=0, end=0x3F):
     # bulk2(dev, "\x22\x02" + chr(start) + "\x00" + chr(end) + "\x00\x06"
     return periph_r(dev, 0x02, start, end)
 
-def periph_dump(dev):
-    print 'Peripheral memory'
-    hexdump(ta_r(dev, 0x00, 0x3F), label="TA", indent='  ')
-    hexdump(sm_r(dev, 0x00, 0x3F), label="SM", indent='  ')
-    import sys; sys.exit(1)
+def mkstruct(name, encoding, size=None):
+    if len(encoding) % 2 != 0:
+        raise Exception('Need even number of elements')
+    fmts = ''
+    names = []
+    for i in xrange(0, len(encoding), 2):
+        fname, fmt = encoding[i:i+2]
+        names.append(fname)
+        fmts += fmt
+    calc = struct.calcsize(fmts)
+    if size and size != calc:
+        raise Exception("Expect size %d (0x%02X), got %d (0x%02X)" % (size, size, calc, calc))
+    return fmts, namedtuple(name, names)
+
+def print_mkstruct(sm, filter=None):
+    '''
+    for k, v in sm._asdict().iteritems():
+        if 'pad' not in k:
+            print 'print "  %s: %%d" %% sm.%s' % (k, k)
+    '''
+    for k, v in sm._asdict().iteritems():
+        if not filter or filter(k, v):
+            if type(k) in (str, unicode):
+                print "  %s: %s" % (k, v)
+            else:
+                print "  %s: %d" % (k, v)
+
+
+# 0x40 words
+SM_FMT, SM =  mkstruct('sm', (
+        'unk00', 'H', 'name', '12s', 'unk0E', 'H',
+        'unk10', 'H', 'unk12', 'H', 'unk14', 'H', 'unk16', 'H', 'unk18', 'H', 'unk1A', 'H', 'unk1C', 'H', 'unk1E', 'H',
+        'ins_all', 'H', 'pad22', 'H', 'ins_last', 'H', 'unk26', 'H', 'pad28', '28s',
+        'unk44', 'H', 'unk46', 'H', 'unk48', 'H', 'pad4A', 'H', 'pad4C', '4s',
+        'unk50', 'H', 'unk52', 'H', 'pad54', '44s'
+        ), 0x80)
+
+SM2_FMT = '<HHHHHH'
+
+def sm_decode(buff):
+    up = list(struct.unpack(SM_FMT, buff))
+    # Remove string padding
+    up[1] = up[1].replace('\x00', '')
+    return SM(*up)
+
+'''
+********************************************************************************
+Higher level functions
+********************************************************************************
+'''
+def sn_read(dev, verbose=False):
+    # Generated from packet 118/119
+    buff = sn_r(dev)
+    if 0:
+        validate_read(
+                "\x3A\x00\x90\x32\xA7\x02\x2A\x86\x01\x95\x3C\x36\x90\x00\x1F"
+                "\x00\x01\x00\xD6\x05\x01\x00\x72\x24\x22\x39\x00\x00\x00\x00\x27"
+                "\x1F",
+                buff, "packet 120/121")
+    sn = buff[6:8]
+    #sn = binascii.hexlify(sn)
+    sn = struct.unpack('<H', sn)[0]
+    if verbose:
+        print 'S/N: %s' % sn
+    return sn
+
+SM1_FMT = '<H12s18s'
+SM1 = namedtuple('sm', ('unk0', 'name', 'unk12'))
+
+def sm_decode3(buff):
+    up = list(struct.unpack(SM1_FMT, buff))
+    # Remove string padding
+    up[1] = up[1].replace('\x00', '')
+    return SM1(*up)
+
+# Socket module read command
+# Maybe a higher level command instead of the lower level read?
+# Only returns the first 32 bytes
+def cmd_sm_0e02(dev):
+    return bulk2(dev, "\x0E\x02", target=0x20)
+
+def sm_info3(dev):
+    buff = cmd_sm_0e02(dev)
+    if 0:
+        validate_readv((
+                  "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF"
+                  "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF"
+                  "\xFF",
+                  
+                  # Socket module
+                  # 00000000  11 00 53 4D 34 38 44 00  00 00 00 00 00 00 5D F4  |..SM48D.......].|
+                  # 00000010  39 FF 00 00 00 00 00 00  00 00 00 00 00 00 62 6C  |9.............bl|
+                  "\x11\x00\x53\x4D\x34\x38\x44\x00\x00\x00\x00\x00\x00\x00\x5D\xF4" \
+                  "\x39\xFF\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x62\x6C",
+                  ),
+                  buff, "packet 136/137")
+    # Don't throw exception on no SM for now?)
+    # since it will break other code
+    if buff == '\xFF' * 32:
+        return None
+    return sm_decode3(buff)
+
+def sm_info1(dev):
+    sm_info0(dev)
+    
+    # Generated from packet 23/24
+    cmd_49(dev)
+    
+    # Generated from packet 27/28
+    sm = sm_info3(dev)
+    print 'Name: %s' % sm.name
+    return sm
+
+def sm_info0(dev):
+    # Original code is likely check if SM is inserted before reading
+    gpio_readi(dev)
+    gpio_readi(dev)
+
+    sm_info22(dev)
+    sm_info24(dev)
+    sm_info3(dev)
 
 def sm_is_inserted(gpio):
     return not bool(gpio & gpio_i2s['smn'])
@@ -296,15 +357,15 @@ def sm_insert(dev, verbose=True):
     #hexdump(buff, label="sm_insert", indent='  ')
     SM2_FMT = '<HHHH24s'
     SM2 = namedtuple('sm', ('ins_all', 'unk1', 'ins_last', 'unk2', 'res'))
-    sm = SM2(*struct.unpack(SM2_FMT, buff))
+    sm2 = SM2(*struct.unpack(SM2_FMT, buff))
     if verbose:
         # Auto increments during some operation
-        print 'SM insertions (all): %d' % sm.ins_all
-        print 'SM insertions (since last): %d' % sm.ins_last
+        print 'SM insertions (all): %d' % sm2.ins_all
+        print 'SM insertions (since last): %d' % sm2.ins_last
 
-    return sm
+    return sm2
 
-def sm_info10(dev):
+def sm_info10(dev, verbose=True):
     # Generated from packet 35/36
     buff = sm_r(dev, 0x10, 0x13)
     '''
@@ -319,38 +380,23 @@ def sm_info10(dev):
     hexdump(buff, label="sm_info10", indent='  ')
     SM3_FMT = '<HHHH'
     SM3 = namedtuple('sm3', ('ins_all', 'unk1', 'ins_last', 'unk2'))
-    sm = SM3(*struct.unpack(SM3_FMT, buff))
-    print '  Insertions (all): %d' % sm.ins_all
-    print '  Insertions (since last): %d' % sm.ins_last
+    sm3 = SM3(*struct.unpack(SM3_FMT, buff))
+    if verbose:
+        print '  Insertions (all): %d' % sm3.ins_all
+        print '  Insertions (since last): %d' % sm3.ins_last
+    return sm3
 
 def sm_info22(dev):
     # Generated from packet 11/12
     buff = sm_r(dev, 0x22, 0x23)
-    validate_read("\xAA\x55\x33\xA2", buff, "packet 13/14")
+    if 0:
+        validate_read("\xAA\x55\x33\xA2", buff, "packet 13/14")
 
 def sm_info24(dev):
     # Generated from packet 15/16
     buff = sm_r(dev, 0x24, 0x25)
-    validate_read("\x01\x00\x00\x00", buff, "packet 17/18")
-
-def cmd_01(dev):
-    if 1:
-        return cmd_01r(dev)
-
-    buff = cmd_01r(dev, validate=False)
     if 0:
-        where(2)
-        hexdump(buff, indent='  ')
-    else:
-        print 'cmd_01'
-    
-    state = ord(buff[0x13])
-    print '  State: 0x%02X' % state
-    print '  0x15: 0x%02X' % ord(buff[0x15])
-    print '  0x16: 0x%02X' % ord(buff[0x16])
-    print '  0x17: 0x%02X' % ord(buff[0x17])
-
-    return buff
+        validate_read("\x01\x00\x00\x00", buff, "packet 17/18")
 
 '''
 Some sort of large status structure
@@ -373,6 +419,9 @@ def cmd_01r(dev, validate=True):
             donef=donef)
     #print 'cmd_01 len: %d' % len(buff)
     return buff
+
+def cmd_01(dev):
+    return cmd_01r(dev)
 
 # cmd_01: some sort of big status read
 # happens once during startup and a few times during programming write/read cycles
@@ -543,6 +592,7 @@ def cmd_49(dev):
     # Generated from packet 156/157
     buff = bulk2(dev, "\x49", target=2)
     validate_read("\x0F\x00", buff, "packet 158/159")
+    return buff
 
 # cmd_4A
 def cmd_4A(dev):

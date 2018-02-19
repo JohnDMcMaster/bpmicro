@@ -76,7 +76,7 @@ def replay(dev):
     # Generated from packet 65/66
     cmd_10(dev)
 
-    sm_read(dev)
+    sm_info3(dev)
     '''
     validate_read(
         "\x11\x00\x53\x4D\x34\x38\x44\x00\x00\x00\x00\x00\x00\x00\x5D\xF4" \

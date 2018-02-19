@@ -2,7 +2,7 @@ from bpmicro.usb import usb_wraps
 from bpmicro.util import hexdump
 
 from bpmicro.cmd import bulk2, bulk86
-from bpmicro.cmd import sm_read, led_mask_30
+from bpmicro.cmd import sm_info3, led_mask_30
 from bpmicro.cmd import cmd_20_mk, cmd_49, cmd_02, cmd_50, cmd_50_mk, cmd_0C_mk, cmd_57s, cmd_57_50, cmd_41, cmd_43, cmd_10, cmd_45
 from bpmicro.cmd import cmd_4C, cmd_09, cmd_08, cmd_3B, cmd_4A
 from bpmicro.cmd import sm_info0, sm_info1, sm_insert, sn_read, sm_info10
@@ -75,7 +75,7 @@ def read_replay1(dev, cont=True):
     # Generated from packet 65/66
     cmd_10(dev)
 
-    sm_read(dev)
+    sm_info3(dev)
     '''
     validate_read(
         "\x11\x00\x53\x4D\x34\x38\x44\x00\x00\x00\x00\x00\x00\x00\x5D\xF4" \
@@ -770,11 +770,11 @@ def dev_write(dev, devcfg, cont=True, verbose=False, blank=True):
     # Generated from packet 783/784
     #cmd.sm_info24(dev)
     # Generated from packet 787/788
-    #sm_read(dev)
+    #sm_info3(dev)
     # Generated from packet 791/792
     cmd_49(dev)
     # Generated from packet 795/796
-    #sm_read(dev)
+    #sm_info3(dev)
     # Generated from packet 799/800
     sm_insert(dev)
     

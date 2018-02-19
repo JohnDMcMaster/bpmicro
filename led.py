@@ -19,9 +19,6 @@ if __name__ == "__main__":
     parser.add_argument('status', help='String value or 0-7 direct mask, 1: fail, 2: active, 4: pass')
     args = parser.parse_args()
 
-    if args.cycle:
-        startup.cycle()
-
     try:
         status = int(args.status, 0)
     except ValueError:

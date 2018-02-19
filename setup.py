@@ -32,7 +32,7 @@ setup(
     author_email='JohnDMcMaster@gmail.com',
     description = ("BP Microsystems open source driver."),
     license = "BSD",
-    keywords = "EPROM programmer BPMicrosystems",
+    keywords = "EPROM flash programmer BPMicrosystems",
     url='https://github.com/JohnDMcMaster/bpmicro',
     packages=['bpmicro'],
     scripts=scripts_dist,

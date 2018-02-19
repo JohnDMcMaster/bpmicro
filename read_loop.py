@@ -12,9 +12,6 @@ def main():
     parser.add_argument('device') 
     args = parser.parse_args()
 
-    if args.cycle:
-        startup.cycle()
-
     verbose = True
     bp = startup.get()
     device = devices.get(bp, args.device, verbose=verbose)

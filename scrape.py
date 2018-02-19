@@ -251,7 +251,7 @@ def peek_bulk2(p):
             line('cmd.sn_read(dev)')
     elif cmd == "\x0E\x02":
         if emit_ro():
-            line('cmd.sm_read(dev)')
+            line('cmd.sm_info3(dev)')
     elif cmd == "\x10\x80\x02":
         cmp_buff("\x80\x00\x00\x00\x09\x00", reply)
         line('cmd.cmd_10(dev)')
@@ -284,6 +284,7 @@ def peek_bulk2(p):
         line('cmd.cmd_45(dev)')
     elif cmd == "\x49":
         cmp_buff("\x0F\x00", reply)
+        # XXX: I think this is a RO command
         line('cmd.cmd_49(dev)')
     elif cmd == "\x4A\x03\x00\x00\x00":
         cmp_buff("\x03\x00", reply)
