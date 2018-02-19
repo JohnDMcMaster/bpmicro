@@ -230,7 +230,7 @@ def sm_r(dev, start=0, end=0x3F):
 def mkstruct(name, encoding, size=None):
     if len(encoding) % 2 != 0:
         raise Exception('Need even number of elements')
-    fmts = ''
+    fmts = '<'
     names = []
     for i in xrange(0, len(encoding), 2):
         fname, fmt = encoding[i:i+2]
@@ -257,8 +257,9 @@ def print_mkstruct(sm, filter=None):
 
 # 0x40 words
 SM_FMT, SM =  mkstruct('sm', (
-        'unk00', 'H', 'name', '12s', 'unk0E', 'H',
-        'unk10', 'H', 'unk12', 'H', 'unk14', 'H', 'unk16', 'H', 'unk18', 'H', 'unk1A', 'H', 'unk1C', 'H', 'unk1E', 'H',
+        # namei is referenced by the diagnostics, printed in hex (but as LE)
+        'unk00', 'H', 'name', '12s', 'namei', 'I',
+        'unk12', 'H', 'unk14', 'H', 'unk16', 'H', 'unk18', 'H', 'unk1A', 'H', 'unk1C', 'H', 'unk1E', 'H',
         'ins_all', 'H', 'pad22', 'H', 'ins_last', 'H', 'unk26', 'H', 'pad28', '28s',
         'unk44', 'H', 'unk46', 'H', 'unk48', 'H', 'pad4A', 'H', 'pad4C', '4s',
         'unk50', 'H', 'unk52', 'H', 'pad54', '44s'
