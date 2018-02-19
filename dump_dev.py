@@ -6,6 +6,24 @@ import argparse
 import binascii
 import os
 
+def auto_dir(parent, prefix, default=None):
+    if default:
+        dout = args.dout
+    else:
+        if not os.path.exists(parent):
+            os.mkdir(parent)
+        i = 0
+        while True:
+            dout = os.path.join(parent, prefix + str(sn))
+            if i:
+                dout += '.' + str(i)
+            if not os.path.exists(dout):
+                break
+            i += 1
+    if not os.path.exists(dout):
+        os.mkdir(dout)
+    return dout
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Dump device data')
     util.add_bool_arg(parser, '--verbose', default=True, help='Print hex dumps')
@@ -18,22 +36,8 @@ if __name__ == "__main__":
 
     dout = None
     if args.save:
-        if args.dout:
-            dout = args.dout
-        else:
-            if not os.path.exists('dump'):
-                os.mkdir('dump')
-            i = 0
-            while True:
-                dout = 'dump/' + str(sn)
-                if i:
-                    dout += '.' + str(i)
-                if not os.path.exists(dout):
-                    break
-                i += 1
+        dout = auto_dir('dump', 'bp_', args.dout)
         print 'Writing to %s' % dout
-        if not os.path.exists(dout):
-            os.mkdir(dout)
         _t = util.IOLog(out_fn=os.path.join(dout, 'out.txt'))
 
     print
