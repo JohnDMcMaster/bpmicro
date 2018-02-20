@@ -102,3 +102,12 @@ if __name__ == "__main__":
         util.hexdump(ta_eeprom)
     if args.save:
         open(os.path.join(dout, 'ta_eeprom_%s.bin' % ta.name), 'w').write(ta_eeprom)
+
+    print
+    print 'ADC'
+    print 'NOTE: best guess'
+    for name, (reg, sf) in cmd.adcs.iteritems():
+        raw = cmd.read_adc_raw(bp.dev, reg)
+        scaled = raw * sf
+        print '  %s (0x%02X): 0x%04X => %0.3f V' % (name, reg, raw, scaled)
+
