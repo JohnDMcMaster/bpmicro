@@ -190,7 +190,7 @@ def bulk2b(dev, cmd):
 # 0x40 words
 SM_FMT, SM =  util.mkstruct('SM', (
         # namei is referenced by the diagnostics, printed in hex (but as LE)
-        'unk00', 'H', 'name', '12s', 'namei', 'I',
+        'sockid', 'H', 'name', '12s', 'namei', 'I',
         'unk12', 'H', 'unk14', 'H', 'unk16', 'H', 'unk18', 'H', 'unk1A', 'H', 'unk1C', 'H', 'unk1E', 'H',
         'ins_all', 'H', 'pad22', 'H', 'ins_last', 'H', 'unk26', 'H', 'pad28', '28s',
         'unk44', 'H', 'unk46', 'H', 'unk48', 'H', 'pad4A', 'H', 'pad4C', '4s',

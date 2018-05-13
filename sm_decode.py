@@ -1,5 +1,6 @@
 from bpmicro import cmd
 from bpmicro import util
+from bpmicro import sockets
 
 if __name__ == "__main__":
     import argparse
@@ -14,3 +15,10 @@ if __name__ == "__main__":
         util.print_mkstruct(sm)
     else:
         util.print_mkstruct(sm, filter=lambda k, v: 'pad' not in k and 'unk' not in k)
+
+    name_expect = sockets.name_i2s.get(sm.sockid, None)
+    if name_expect is None:
+        print 'Note: unknown socket type %s' % sm.sockid
+    elif name_expect != sm.name:
+        print 'WARNING: expected name %s but got %s' % (name_expect, sm.name)
+
