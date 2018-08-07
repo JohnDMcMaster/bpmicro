@@ -3,6 +3,7 @@ from bpmicro.util import str2hex
 import json
 import binascii
 import subprocess
+import md5
 
 from bpmicro.cmd import led_i2s
 from bpmicro.util import hexdump
@@ -55,16 +56,17 @@ def emit_ro():
 # args.big_thresh
 big_pkt = {}
 def fmt_terse(data, pktn=None):
+    data = str(data)
     for modname, packets in fw_mods.iteritems():
         if data in packets:
             return '%s.%s' % (modname, packets[data])
-    '''
-    if pktn and data in big_pkt:
+
+    if data in big_pkt:
         return 'my_fw.%s' % big_pkt[data]
-    '''
 
     if args.big_thresh and pktn and len(data) > args.big_thresh:
-        big_pkt[data] = 'p%d' % pktn
+        #big_pkt[data] = 'p%d' % pktn
+        big_pkt[data] = 'p%s' % (binascii.hexlify(str(md5.new(data).digest()))[0:8],)
         return 'my_fw.%s' % big_pkt[data]
 
     return dump_packet(data)
@@ -523,7 +525,9 @@ if __name__ == "__main__":
     print
     print
     print '# my_fw.py'
+    print '# %u big packets' % (len(big_pkt),)
     for pkt, name in big_pkt.iteritems():
+        print '# %u bytes' % (len(pkt),)
         print '%s = \\%s' % (name, dump_packet(pkt))
 
     lines_commit()
@@ -542,7 +546,7 @@ if __name__ == "__main__":
     if args.fin.find('.cap') >= 0:
         fin = '/tmp/scrape.json'
         #print 'Generating json'
-        cmd = 'usbrply --packet-numbers --no-setup --comment --fx2 %s -j %s >%s' % (args.usbrply, args.fin, fin)
+        cmd = 'usbrply --packet-numbers --no-setup --comment --fx2 --device-hi %s -j %s >%s' % (args.usbrply, args.fin, fin)
         #print cmd
         subprocess.check_call(cmd, shell=True)
     else:
