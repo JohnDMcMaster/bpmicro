@@ -13,13 +13,17 @@ fw_mods = {}
 if 0:
     import bpmicro.mcs51.i87c51_fw
     fw_mods['bpmicro.mcs51.i87c51_fw'] = bpmicro.mcs51.i87c51_fw.p_p2n
-if 1:
+if 0:
     import bpmicro.pic.pic16f84_fw
     fw_mods['bpmicro.pic.pic16f84_fw'] = bpmicro.pic.pic16f84_fw.p_p2n
 
-if 1:
+if 0:
     import bpmicro.pic.pic17c43_fw
     fw_mods['bpmicro.pic.pic17c43_fw'] = bpmicro.pic.pic17c43_fw.p_p2n
+
+if 1:
+    import bpmicro.mcs51.at89c51_fw
+    fw_mods['bpmicro.mcs51.at89c51_fw'] = bpmicro.mcs51.at89c51_fw.p_p2n
 
 pi = None
 ps = None
@@ -362,7 +366,7 @@ def bulk_write(p):
         elif cmd == "\x41\x00\x00":
             line('cmd.cmd_41(dev)')
         elif cmd == "\x43\x19\x10\x00\x00":
-            line('cmd.cmd_43(dev)')
+            line('cmd.cmd_43(dev, "\x10")')
         elif cmd == "\x4C\x00\x02":
             line('cmd.cmd_4C(dev)')
         elif cmd[0] == "\x57" and len(cmd) == 7:
@@ -541,7 +545,12 @@ if __name__ == "__main__":
     parser.add_argument('--big-thresh', type=int, default=255)
     parser.add_argument('--usbrply', default='')
     parser.add_argument('fin')
+    parser.add_argument('fout', nargs='?')
     args = parser.parse_args()
+
+    if args.fout:
+        import sys
+        sys.stdout = open(args.fout, 'w')
 
     if args.fin.find('.cap') >= 0:
         fin = '/tmp/scrape.json'
@@ -555,4 +564,3 @@ if __name__ == "__main__":
     dumb=args.dumb
     omit_ro=args.omit_ro
     dump(fin)
-
