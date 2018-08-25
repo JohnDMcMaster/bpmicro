@@ -36,6 +36,10 @@ class BusError(Exception):
 class Unsupported(Exception):
     pass
 
+class SMNotFound(Exception):
+    pass
+
+
 # prefix: leave to external logic to packetize
 def bulk86(dev, target=None, donef=None, prefix=None):
     bulkRead, _bulkWrite, _controlRead, _controlWrite = usb_wraps(dev)
@@ -737,3 +741,12 @@ def check_cont(dev, verbose=False, removed_ref=None):
         # Lets bend a pin and verify
         else:
             raise ContFail('Continuity partial failure (dirty contacts?  Inserted wrong?)')
+
+def sm_name(dev):
+    gpio = gpio_readi(dev)
+    if not sm_is_inserted(gpio):
+        raise SMNotFound()
+
+    sm_eeprom = sm_r(dev, 0x00, 0x3F)
+    sm = sm_decode(sm_eeprom)
+    return sm.name

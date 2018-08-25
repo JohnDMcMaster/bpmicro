@@ -14,7 +14,7 @@ def auto_dir(parent, prefix, default=None):
             os.mkdir(parent)
         i = 0
         while True:
-            dout = os.path.join(parent, prefix + str(sn))
+            dout = os.path.join(parent, prefix)
             if i:
                 dout += '.' + str(i)
             if not os.path.exists(dout):
@@ -36,9 +36,14 @@ if __name__ == "__main__":
     bp = startup.get()
     sn = cmd.sn_read(bp.dev)
 
+    try:
+        sm_name = cmd.sm_name(bp.dev)
+    except cmd.SMNotFound:
+        sm_name = 'none'
+
     dout = None
     if args.save:
-        dout = auto_dir('dump', 'bp_', args.dout)
+        dout = auto_dir('dump', 'sn-%s_sm-%s' % (sn, sm_name), args.dout)
         print 'Writing to %s' % dout
         _t = util.IOLog(out_fn=os.path.join(dout, 'out.txt'))
 
