@@ -552,7 +552,7 @@ if __name__ == "__main__":
         import sys
         sys.stdout = open(args.fout, 'w')
 
-    if args.fin.find('.cap') >= 0:
+    if args.fin.find('.cap') >= 0 or args.fin.find('.pcapng') >= 0:
         fin = '/tmp/scrape.json'
         #print 'Generating json'
         cmd = 'usbrply --packet-numbers --no-setup --comment --fx2 --device-hi %s -j %s >%s' % (args.usbrply, args.fin, fin)
