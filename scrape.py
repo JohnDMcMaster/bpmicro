@@ -54,12 +54,12 @@ def fmt_terse(data, pktn=None):
     if h in fw.hash2bin:
         assert data == fw.hash2bin[h]
         hash_used.add(h)
-        return 'fw.hash2bin("%s")' % h
+        return 'fw.hash2bin["%s"]' % h
 
     if args.big_thresh and pktn and len(data) > args.big_thresh:
         fw.hash2bin[h] = data
         hash_used.add(h)
-        return 'fw.hash2bin("%s")' % h
+        return 'fw.hash2bin["%s"]' % h
 
     return dump_packet(data)
 
@@ -409,8 +409,6 @@ def dump(fin, save=False):
     line('# Generated from scrape.py')
     line('from bpmicro.cmd import bulk2, bulk86')
     line('from bpmicro import cmd')
-    line('import bpmicro.pic16f84.write_fw')
-    line('import bpmicro.pic16f84.read_fw')
     line('from bpmicro.usb import usb_wraps')
     line('from bpmicro.usb import validate_read')
     line('from bpmicro import fw')
@@ -523,10 +521,16 @@ if __name__ == "__main__":
             assert not os.path.exists(fn)
             open(fn, 'w').write(d)
     line('# %u existing firmwares' % (len(hash_used) - len(new_fw)))
-    used = [(fw.hash2fn_get_rel(h, None), h) for h in hash_used]
-    for fn, h in sorted(used):
-        if fn:
-            line('#   %s: %s' % (h, fn))
+    used = [(fw.hash2fns_get_rel(h, None), h) for h in hash_used]
+    for fns, h in sorted(used):
+        if fns:
+            if len(fns) == 1:
+                fn = list(fns)[0]
+                line('#   %s: %s' % (h, fn))
+            else:
+                line('#   %s' % (h,))
+                for fn in fns:
+                    line('#     %s' % (fn,))
 
     lines_commit()
 

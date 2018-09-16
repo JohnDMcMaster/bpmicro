@@ -8,13 +8,16 @@ FW_DIR = os.path.join(os.path.dirname(__file__), 'fw')
 # md5 hash to file content
 hash2bin = {}
 # absolute paths
-hash2fn = {}
+hash2fns = {}
 
-def hash2fn_get_rel(h, default=None):
-    fn = hash2fn.get(h, default)
-    if fn is None:
-        return fn
+def fn2rel(fn):
     return fn.replace(FW_DIR + '/', '')
+    
+def hash2fns_get_rel(h, default=None):
+    fns = hash2fns.get(h, default)
+    if fns is None:
+        return None
+    return [fn2rel(fn) for fn in fns]
 
 def fwhash(data):
     return binascii.hexlify(str(md5.new(data).digest()))[0:8]
@@ -33,9 +36,9 @@ def reindex():
         h = fwhash(b)
         if h in hash2bin:
             assert hash2bin[h] == b, 'Hash collision!'
-            print('WARNING: duplicate firmware w/ hash %s' % h)
-            continue
-        hash2bin[h] = b
-        hash2fn[h] = f
+            #print('WARNING: duplicate firmware w/ hash %s' % h)
+        else:
+            hash2bin[h] = b
+        hash2fns.setdefault(h, set()).add(f)
 
 reindex()

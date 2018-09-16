@@ -305,12 +305,6 @@ Higher level functions
 def sn_read(dev, verbose=False):
     # Generated from packet 118/119
     buff = sn_r(dev)
-    if 0:
-        validate_read(
-                "\x3A\x00\x90\x32\xA7\x02\x2A\x86\x01\x95\x3C\x36\x90\x00\x1F"
-                "\x00\x01\x00\xD6\x05\x01\x00\x72\x24\x22\x39\x00\x00\x00\x00\x27"
-                "\x1F",
-                buff, "packet 120/121")
     sn = buff[6:8]
     #sn = binascii.hexlify(sn)
     sn = struct.unpack('<H', sn)[0]
