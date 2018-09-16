@@ -22,13 +22,13 @@ def init_adapter(dev):
 
     # buff = bulkRead(0x86, 0x0200)
     _prefix, buff, _size = cmd.bulk86_next_read(dev)
-    return buff
+    return str(buff)
 
 def init_dev(dev, verbose=False):
     devsig = init_adapter(dev)
     {
-        "\x16":             bp1600.init_dev,
         "\x08\x16\x01\x00": bp1410.init_dev,
+        "\x16":             bp1600.init_dev,
         }[devsig](dev, verbose=verbose)
 
 def open_dev(usbcontext=None, verbose=False):

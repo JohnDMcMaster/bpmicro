@@ -29,20 +29,8 @@ def init(dev):
     validate_read("\x16", init_adapter(dev), "packet 643/644")
     init_dev(dev)
 
-def init_dev(dev, verbose=False):
+def boot_cold(dev):
     bulkRead, bulkWrite, controlRead, controlWrite = usb_wraps(dev)
-
-    # NOTE:: req max 512 but got 4
-    # Generated from packet 651/652
-    # None (0xB0)
-    # NOTE:: req max 4096 but got 3
-    buff = controlRead(0xC0, 0xB0, 0x0000, 0x0000, 4096)
-    # Req: 4096, got: 3
-    validate_read("\x00\x00\x00", buff, "packet 651/652")
-
-    # Generated from packet 653/654
-    _prefix, buff, _size = cmd.bulk86_next_read(dev)
-    validate_read("\x16", buff, "packet 653/654")
 
     # NOTE:: req max 512 but got 4
     # Generated from packet 655/656
@@ -251,6 +239,162 @@ def init_dev(dev, verbose=False):
     validate_read("\xAB", buff, "packet W: 821/822, R 1 to 823/824")
     # Generated from packet 825/826
     # bulk2 aggregate: packet W: 825/826, 1 to R 827/828
+
+def boot_warm(dev):
+    bulkRead, bulkWrite, controlRead, controlWrite = usb_wraps(dev)
+
+    # Generated from packet 387/388
+    # bulk2 aggregate: packet W: 387/388, 1 to R 389/390
+    buff = cmd.bulk2b(dev, 
+        "\x43\x19\x00\x00\x00\x3B\x7E\x25\x00\x00\xFE\xFF\x3B\x7C\x25\x00" \
+        "\x00\xFE\xFF\x00"
+        )
+    validate_read("\x40\x06", buff, "packet W: 387/388, R 1 to 389/390")
+    # Generated from packet 399/400
+    # bulk2 aggregate: packet W: 399/400, 1 to R 401/402
+    buff = cmd.bulk2b(dev, 
+        "\x14\x38\x25\x00\x00\x04\x00\xB2\x32\x96\x00\xC0\x03\x20\x00\x14" \
+        "\x40\x25\x00\x00\x01\x00\x1A\x41\x0E\x01"
+        )
+    validate_read(
+        "\x11\x00\x54\x41\x32\x34\x30\x56\x4C\x56\x5F\x46\x58\x00\x00\x00" \
+        "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x38\x21"
+        , buff, "packet W: 399/400, R 1 to 401/402")
+    # Generated from packet 419/420
+    bulkWrite(0x02, "\x43\x19\x00\x00\x00")
+    # Generated from packet 421/422
+    bulkWrite(0x02, "\x20\x01\x00\x0C\x04")
+    # Generated from packet 423/424
+    cmd.cmd_41(dev)
+    # Generated from packet 425/426
+    # bulk2 aggregate: packet W: 425/426, 1 to R 427/428
+    cmd.cmd_10(dev)
+    # Generated from packet 429/430
+    # bulk2 aggregate: packet W: 429/430, 1 to R 431/432
+    cmd.cmd_45(dev)
+    # Generated from packet 433/434
+    # bulk2 aggregate: packet W: 433/434, 1 to R 435/436
+    cmd.cmd_49(dev)
+    # Generated from packet 449/450
+    bulkWrite(0x02, 
+        "\x3B\x0C\x22\x00\xC0\x00\x00\x3B\x0E\x22\x00\xC0\x00\x00\x3B\x1A" \
+        "\x22\x00\xC0\x18\x00\x40"
+        )
+    # Generated from packet 451/452
+    # bulk2 aggregate: packet W: 451/452, 1 to R 453/454
+    cmd.cmd_4A(dev)
+    # Generated from packet 455/456
+    cmd.cmd_4C(dev)
+    # Generated from packet 457/458
+    # None (0xB2)
+    buff = controlWrite(0x40, 0xB2, 0x0000, 0x0000, "")
+    # Generated from packet 459/460
+    cmd.cmd_50(dev, "\x45\x00")
+    # Generated from packet 461/462
+    # bulk2 aggregate: packet W: 461/462, 1 to R 463/464
+    buff = cmd.bulk2b(dev, 
+        "\xE9\x03\x00\x00\x00\x90\x00\x00\xE9\x03\x00\x00\x00\x90\x01\x10" \
+        "\xE9\x03\x00\x00\x00\x90\x00\x00\xE9\x03\x00\x00\x00\x90\x01\x80" \
+        "\xE9\x02\x00\x00\x00\x90\x00\xE9\x04\x00\x00\x00\x00\x00\x00\x00" \
+        "\xE9\x03\x00\x00\x00\x90\x00\x00\x66\xB9\x00\x00\xB2\x00\xFB\xFF" \
+        "\x25\x44\x11\x00\x00"
+        )
+    validate_read("\x80\x00", buff, "packet W: 461/462, R 1 to 463/464")
+    # Generated from packet 465/466
+    # bulk2 aggregate: packet W: 465/466, 1 to R 467/468
+    cmd.cmd_02(dev, "\x81\x00\x50\x00\x09\x00")
+    # Generated from packet 469/470
+    cmd.cmd_50(dev, "\xC9\x00")
+    # Generated from packet 471/472
+    # bulk2 aggregate: packet W: 471/472, 1 to R 473/474
+    buff = cmd.bulk2b(dev, 
+        "\x66\xC7\x05\x1E\x22\x00\xC0\x00\x20\x66\xB8\x01\x2D\x81\xE3\xFF" \
+        "\xFF\x00\x00\x66\xBB\x18\x00\x66\xC7\x05\x30\x40\x00\xC0\xF0\xFF" \
+        "\x89\xD9\xC1\xE1\x02\x66\xC7\x81\x02\x00\x00\x00\xF0\xFF\x66\x03" \
+        "\x05\xE4\x46\x00\x00\x66\x89\x05\x90\x40\x00\xC0\x89\xDA\x81\xCA" \
+        "\x00\x80\x00\x00\x66\x89\x15\x50\x40\x00\xC0\xC6\x05\x14\x22\x00" \
+        "\xC0\x7B\x81\xCA\x00\x40\x00\x00\x66\x89\x15\x50\x40\x00\xC0\x89" \
+        "\xD9\x66\xC1\xE1\x02\x66\x89\x81\x00\x00\x00\x00\x66\x2B\x05\xE4" \
+        "\x46\x00\x00\xC6\x05\x14\x22\x00\xC0\xBB\x81\xCB\x00\x80\x00\x00" \
+        "\x66\x89\x1D\x50\x40\x00\xC0\x89\xC2\x81\xE2\x07\x00\x00\x00\x03" \
+        "\xD2\x81\xCA\x01\x00\x00\x00\x89\xD9\x81\xE1\x03\x00\x00\x00\xD3" \
+        "\xE2\xD3\xE2\xD3\xE2\xD3\xE2\xD3\xE2\xC1\xE2\x0A\x89\xD9\x81\xE1" \
+        "\xFC\x03\x00\x00\x09\xCA\x88\x82\x00\x00\x00\x40\x66\xB9\x00\x00" \
+        "\xB2\x00\xFB\xFF\x25\x44\x11\x00\x00"
+        )
+    validate_read("\x81\x00", buff, "packet W: 471/472, R 1 to 473/474")
+    # Generated from packet 475/476
+    # bulk2 aggregate: packet W: 475/476, 1 to R 477/478
+    cmd.cmd_02(dev, "\x82\x00\x20\x01\x09\x00")
+    # Generated from packet 479/480
+    # bulk2 aggregate: packet W: 479/480, 1 to R 481/482
+    buff = cmd.bulk2b(dev, 
+        "\x04\x09\x05\x02\x06\x2E\x08\x01\x09\x01\x0B\xC0\x57\x81\x00\x0C" \
+        "\x04\x30"
+        )
+    validate_read("\x04\x00", buff, "packet W: 479/480, R 1 to 481/482")
+    # Generated from packet 483/484
+    # bulk2 aggregate: packet W: 483/484, 1 to R 485/486
+    buff = cmd.bulk2b(dev, 
+        "\x3B\x0C\x22\x00\xC0\x00\x00\x3B\x0E\x22\x00\xC0\x00\x00\x3B\x1A" \
+        "\x22\x00\xC0\x18\x00\x40\x0E\x01"
+        )
+    validate_read(
+        "\x11\x00\x54\x41\x32\x34\x30\x56\x4C\x56\x5F\x46\x58\x00\x00\x00" \
+        "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x38\x21"
+        , buff, "packet W: 483/484, R 1 to 485/486")
+    # Generated from packet 499/500
+    bulkWrite(0x02, "\x48\x00\x20\x00\x00\x50\x12\x00\x00\x00")
+    # Generated from packet 501/502
+    # bulk2 aggregate: packet W: 501/502, 1 to R 503/504
+    buff = cmd.bulk2b(dev, 
+        "\x00\x00\x00\x00\x04\x00\x08\x00\x0C\x00\x10\x00\x14\x00\x18\x00" \
+        "\x1C\x00"
+        )
+    validate_read("\x82\x00", buff, "packet W: 501/502, R 1 to 503/504")
+    # Generated from packet 505/506
+    # bulk2 aggregate: packet W: 505/506, 1 to R 507/508
+    cmd.cmd_02(dev, "\x83\x00\x40\x01\x09\x00")
+    # Generated from packet 509/510
+    # bulk2 aggregate: packet W: 509/510, 1 to R 511/512
+    buff = cmd.bulk2b(dev, 
+        "\x1D\x20\x01\x09\x00\x00\x00\x15\x60\x00\x00\x00\x00\x00\x00\x00" \
+        "\x00\x00\x00\x00\x00\x00\x1C\x00\x00\x48\x00\x12\xAA"
+        )
+    validate_read("\xAB", buff, "packet W: 509/510, R 1 to 511/512")
+
+def init_dev(dev, verbose=False):
+    bulkRead, bulkWrite, controlRead, controlWrite = usb_wraps(dev)
+
+    buff = controlRead(0xC0, 0xB0, 0x0000, 0x0000, 4096)
+    validate_read("\x00\x00\x00", buff, "packet 651/652")
+
+    _prefix, buff, _size = cmd.bulk86_next_read(dev)
+    validate_read("\x16", buff, "packet 653/654")
+
+    verbose=True
+    # FIXME: does not work!
+    # some sort of protocol incompatibility
+    # not working cold
+    if 1:
+        bulkWrite(0x02, "\x01")
+        _prefix, buff, _size = cmd.bulk86_next_read(dev)
+    else:
+        buff = bytearray(cmd.cmd_01(dev))
+
+    if len(buff) == 97:
+        if verbose:
+            print 'Boot: cold'
+        state = buff[0x13]
+        if state != 0x80 and verbose:
+            print '  WARNING: state: 0x%02X.  Interrupted load?' % state
+        boot_cold(dev)
+    elif len(buff) == 133:
+        if verbose:
+            print 'Boot: warm'
+        boot_warm(dev)
+    else:
+        raise Exception("Bad warm/cold response, len %u" % len(buff))
 
 def main():
     from bpmicro import startup

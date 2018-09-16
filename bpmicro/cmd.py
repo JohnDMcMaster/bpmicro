@@ -430,6 +430,9 @@ immediately before and after firmware load (packets 78 - 91)
       00000010  00 30 00 81 00 00 00 00  00 C0 00 00 00 09 00 08  |.0..............|
 '''
 def cmd_01r(dev, validate=True):
+    # FIXME: hack
+    # not sure how to properly detect done
+    # doesn't seem to follow the protocol used on other packets
     def donef(buff):
         return len(buff) == 129 or len(buff) == 133
 

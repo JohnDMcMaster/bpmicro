@@ -43,7 +43,7 @@ def emit_ro():
         lines_clear()
         return False
     else:
-        return False
+        return True
 
 hash_orig = set(fw.hash2bin.keys())
 hash_used = set()
@@ -216,6 +216,7 @@ def peek_bulk2(p):
     if cmd == "\x01":
         if emit_ro():
             line('cmd.cmd_01(dev)')
+            line('buff = %s' % fmt_terse(reply))
     elif cmd == "\x02":
         line('cmd.cmd_02(dev, %s)' % fmt_terse(reply))
     elif cmd == "\x03":
@@ -445,7 +446,7 @@ def dump(fin, save=False):
                 line('buff = controlRead(0x%02X, 0x%02X, 0x%04X, 0x%04X, %d)' % (
                         p['reqt'], p['req'], p['val'], p['ind'], p['len']))
                 data = binascii.unhexlify(p['data'])
-                line('# Req: %d, got: %d' % (p['len'], len(data)))
+                #line('# Req: %d, got: %d' % (p['len'], len(data)))
                 line('validate_read(%s, buff, "packet %s/%s")' % (
                         fmt_terse(data, p['packn'][0]), p['packn'][0], p['packn'][1]))
         elif p['type'] == 'controlWrite':
@@ -549,7 +550,10 @@ if __name__ == "__main__":
 
     if args.fin.find('.cap') >= 0 or args.fin.find('.pcapng') >= 0:
         fin = '/tmp/scrape.json'
-        cmd = 'usbrply --packet-numbers --no-setup --comment --fx2 --device-hi %s -j %s >%s' % (args.usbrply, args.fin, fin)
+        if args.dumb:
+            cmd = 'usbrply --no-packet-numbers --no-setup --no-comment --fx2 --device-hi %s -j %s >%s' % (args.usbrply, args.fin, fin)
+        else:
+            cmd = 'usbrply --no-setup --comment --fx2 --device-hi %s -j %s >%s' % (args.usbrply, args.fin, fin)
         subprocess.check_call(cmd, shell=True)
     else:
         fin = args.fin
@@ -561,6 +565,6 @@ if __name__ == "__main__":
         assert fnout != fin
         fout = open(fnout, 'w')
 
-    dumb=args.dumb
-    omit_ro=args.omit_ro
+    dumb = args.dumb
+    omit_ro = args.omit_ro
     dump(fin, save=args.save)
