@@ -3,30 +3,18 @@ from bpmicro.util import str2hex
 import json
 import binascii
 import subprocess
-import md5
+import os
+import sys
 
 from bpmicro.cmd import led_i2s
 from bpmicro.util import hexdump
 from bpmicro.util import add_bool_arg
-
-fw_mods = {}
-if 0:
-    import bpmicro.mcs51.i87c51_fw
-    fw_mods['bpmicro.mcs51.i87c51_fw'] = bpmicro.mcs51.i87c51_fw.p_p2n
-if 0:
-    import bpmicro.pic.pic16f84_fw
-    fw_mods['bpmicro.pic.pic16f84_fw'] = bpmicro.pic.pic16f84_fw.p_p2n
-
-if 0:
-    import bpmicro.pic.pic17c43_fw
-    fw_mods['bpmicro.pic.pic17c43_fw'] = bpmicro.pic.pic17c43_fw.p_p2n
-
-if 1:
-    import bpmicro.mcs51.at89c51_fw
-    fw_mods['bpmicro.mcs51.at89c51_fw'] = bpmicro.mcs51.at89c51_fw.p_p2n
+from bpmicro import fw
 
 pi = None
 ps = None
+
+fout = sys.stdout
 
 prefix = ' ' * 8
 indent = ''
@@ -35,7 +23,7 @@ def lines_clear():
     del line_buff[:]
 def lines_commit():
     for line in line_buff:
-        print line
+        fout.write(line + '\n')
     del line_buff[:]
 def line(s):
     line_buff.append('%s%s' % (indent, s))
@@ -57,21 +45,21 @@ def emit_ro():
     else:
         return False
 
-# args.big_thresh
-big_pkt = {}
+hash_orig = set(fw.hash2bin.keys())
+hash_used = set()
 def fmt_terse(data, pktn=None):
     data = str(data)
-    for modname, packets in fw_mods.iteritems():
-        if data in packets:
-            return '%s.%s' % (modname, packets[data])
+    h = fw.fwhash(data)
 
-    if data in big_pkt:
-        return 'my_fw.%s' % big_pkt[data]
+    if h in fw.hash2bin:
+        assert data == fw.hash2bin[h]
+        hash_used.add(h)
+        return 'fw.hash2bin("%s")' % h
 
     if args.big_thresh and pktn and len(data) > args.big_thresh:
-        #big_pkt[data] = 'p%d' % pktn
-        big_pkt[data] = 'p%s' % (binascii.hexlify(str(md5.new(data).digest()))[0:8],)
-        return 'my_fw.%s' % big_pkt[data]
+        fw.hash2bin[h] = data
+        hash_used.add(h)
+        return 'fw.hash2bin("%s")' % h
 
     return dump_packet(data)
 
@@ -99,8 +87,8 @@ def pkt_strip(p):
         return (p[1:1 + size], True, pprefix)
     # Not supposed to happen
     else:
-        print fmt_terse(p)
-        print size
+        print(fmt_terse(p))
+        print(size)
         raise Exception("Bad size")
 
 class CmpFail(Exception):
@@ -393,7 +381,7 @@ def bulk_write(p):
         else:
             line('bulkWrite(0x02, %s)' % (fmt_terse(cmd, p['packn'][0])))
 
-def dump(fin):
+def dump(fin, save=False):
     #global j
     global pi
     global ps
@@ -423,11 +411,10 @@ def dump(fin):
     line('from bpmicro import cmd')
     line('import bpmicro.pic16f84.write_fw')
     line('import bpmicro.pic16f84.read_fw')
-    line('import usb1')
     line('from bpmicro.usb import usb_wraps')
     line('from bpmicro.usb import validate_read')
-    for module in fw_mods:
-        line('import %s' % module)
+    line('from bpmicro import fw')
+    line('import usb1')
     line('')
 
     # remove all comments to make processing easier
@@ -438,14 +425,6 @@ def dump(fin):
     indentP()
     line("bulkRead, bulkWrite, controlRead, controlWrite = usb_wraps(dev)")
     line('')
-    
-    if 0:
-        line("# Generated from packet 61/62")
-        line("# ...")
-        line("# Generated from packet 71/72")
-        line("load_fx2(dev)")
-        line()
-
     
     while pi < len(ps):
         comment = False
@@ -491,24 +470,24 @@ def dump(fin):
     lines_commit()
     indentN()
 
-    print '''
+    line('''
 def open_dev(usbcontext=None):
     if usbcontext is None:
         usbcontext = usb1.USBContext()
     
-    print 'Scanning for devices...'
+    print('Scanning for devices...')
     for udev in usbcontext.getDeviceList(skip_on_error=True):
         vid = udev.getVendorID()
         pid = udev.getProductID()
         if (vid, pid) == (0x14b9, 0x0001):
             print
             print
-            print 'Found device'
-            print 'Bus %03i Device %03i: ID %04x:%04x' % (
+            print('Found device')
+            print('Bus %03i Device %03i: ID %04x:%04x' % (
                 udev.getBusNumber(),
                 udev.getDeviceAddress(),
                 vid,
-                pid)
+                pid))
             return udev.open()
     raise Exception("Failed to find a device")
 
@@ -523,16 +502,31 @@ if __name__ == "__main__":
     dev.claimInterface(0)
     dev.resetDevice()
     replay(dev)
-'''
+''')
 
-    print
-    print
-    print
-    print '# my_fw.py'
-    print '# %u big packets' % (len(big_pkt),)
-    for pkt, name in big_pkt.iteritems():
-        print '# %u bytes' % (len(pkt),)
-        print '%s = \\%s' % (name, dump_packet(pkt))
+    line('')
+    line('')
+    line('')
+    line('# my_fw.py')
+    new_fw = set(fw.hash2bin.keys()) - hash_orig 
+    line('# %u new firmwares' % len(new_fw))
+    # save firmwares
+    fw_dir = os.path.join(fw.FW_DIR, 'tmp')
+    if save:
+        if not os.path.exists(fw_dir):
+            os.mkdir(fw_dir)
+    for h in new_fw:
+        d = fw.hash2bin[h]
+        line('#   %s: %u bytes' % (h, len(d)))
+        if save:
+            fn = os.path.join(fw_dir, '%s.bin' % h)
+            assert not os.path.exists(fn)
+            open(fn, 'w').write(d)
+    line('# %u existing firmwares' % (len(hash_used) - len(new_fw)))
+    used = [(fw.hash2fn_get_rel(h, None), h) for h in hash_used]
+    for fn, h in sorted(used):
+        if fn:
+            line('#   %s: %s' % (h, fn))
 
     lines_commit()
 
@@ -544,23 +538,25 @@ if __name__ == "__main__":
     add_bool_arg(parser, '--omit-ro', default=True, help='Omit read only requests (ex: get SM info)')
     parser.add_argument('--big-thresh', type=int, default=255)
     parser.add_argument('--usbrply', default='')
+    parser.add_argument('--save', action='store_true', help='Save firmware')
+    parser.add_argument('-w', action='store_true', help='Write python file')
     parser.add_argument('fin')
-    parser.add_argument('fout', nargs='?')
     args = parser.parse_args()
-
-    if args.fout:
-        import sys
-        sys.stdout = open(args.fout, 'w')
 
     if args.fin.find('.cap') >= 0 or args.fin.find('.pcapng') >= 0:
         fin = '/tmp/scrape.json'
-        #print 'Generating json'
         cmd = 'usbrply --packet-numbers --no-setup --comment --fx2 --device-hi %s -j %s >%s' % (args.usbrply, args.fin, fin)
-        #print cmd
         subprocess.check_call(cmd, shell=True)
     else:
         fin = args.fin
 
+    if args.w:
+        filename, file_extension = os.path.splitext(args.fin)
+        fnout = filename + '.py'
+        print('Selected output file %s' % fnout)
+        assert fnout != fin
+        fout = open(fnout, 'w')
+
     dumb=args.dumb
     omit_ro=args.omit_ro
-    dump(fin)
+    dump(fin, save=args.save)
