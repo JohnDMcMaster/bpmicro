@@ -95,14 +95,16 @@ def boot_cold(dev):
     # NOTE:: req max 512 but got 35
     # Generated from packet 711/712
     # bulk2 aggregate: packet W: 711/712, 1 to R 713/714
-    buff = cmd.bulk2b(dev, 
-        "\x14\x38\x25\x00\x00\x04\x00\xB2\x32\x96\x00\xC0\x03\x20\x00\x14" \
-        "\x40\x25\x00\x00\x01\x00\x1A\x41\x0E\x01"
-        )
-    validate_read(
-        "\x11\x00\x54\x41\x32\x34\x30\x56\x4C\x56\x5F\x46\x58\x00\x00\x00" \
-        "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x38\x21"
-        , buff, "packet W: 711/712, R 1 to 713/714")
+    # tech adapter read
+    if 0:
+        buff = cmd.bulk2b(dev, 
+            "\x14\x38\x25\x00\x00\x04\x00\xB2\x32\x96\x00\xC0\x03\x20\x00\x14" \
+            "\x40\x25\x00\x00\x01\x00\x1A\x41\x0E\x01"
+            )
+        validate_read(
+            "\x11\x00\x54\x41\x32\x34\x30\x56\x4C\x56\x5F\x46\x58\x00\x00\x00" \
+            "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x38\x21"
+            , buff, "packet W: 711/712, R 1 to 713/714")
     # NOTE:: req max 512 but got 35
     # Generated from packet 715/716
     # bulk2 aggregate: packet W: 715/716, 1 to R 717/718
@@ -250,16 +252,18 @@ def boot_warm(dev):
         "\x00\xFE\xFF\x00"
         )
     validate_read("\x40\x06", buff, "packet W: 387/388, R 1 to 389/390")
-    # Generated from packet 399/400
-    # bulk2 aggregate: packet W: 399/400, 1 to R 401/402
-    buff = cmd.bulk2b(dev, 
-        "\x14\x38\x25\x00\x00\x04\x00\xB2\x32\x96\x00\xC0\x03\x20\x00\x14" \
-        "\x40\x25\x00\x00\x01\x00\x1A\x41\x0E\x01"
-        )
-    validate_read(
-        "\x11\x00\x54\x41\x32\x34\x30\x56\x4C\x56\x5F\x46\x58\x00\x00\x00" \
-        "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x38\x21"
-        , buff, "packet W: 399/400, R 1 to 401/402")
+    if 0:
+        # tech adapter read
+        # Generated from packet 399/400
+        # bulk2 aggregate: packet W: 399/400, 1 to R 401/402
+        buff = cmd.bulk2b(dev, 
+            "\x14\x38\x25\x00\x00\x04\x00\xB2\x32\x96\x00\xC0\x03\x20\x00\x14" \
+            "\x40\x25\x00\x00\x01\x00\x1A\x41\x0E\x01"
+            )
+        validate_read(
+            "\x11\x00\x54\x41\x32\x34\x30\x56\x4C\x56\x5F\x46\x58\x00\x00\x00" \
+            "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x38\x21"
+            , buff, "packet W: 399/400, R 1 to 401/402")
     # Generated from packet 419/420
     bulkWrite(0x02, "\x43\x19\x00\x00\x00")
     # Generated from packet 421/422
@@ -333,16 +337,18 @@ def boot_warm(dev):
         "\x04\x30"
         )
     validate_read("\x04\x00", buff, "packet W: 479/480, R 1 to 481/482")
-    # Generated from packet 483/484
-    # bulk2 aggregate: packet W: 483/484, 1 to R 485/486
-    buff = cmd.bulk2b(dev, 
-        "\x3B\x0C\x22\x00\xC0\x00\x00\x3B\x0E\x22\x00\xC0\x00\x00\x3B\x1A" \
-        "\x22\x00\xC0\x18\x00\x40\x0E\x01"
-        )
-    validate_read(
-        "\x11\x00\x54\x41\x32\x34\x30\x56\x4C\x56\x5F\x46\x58\x00\x00\x00" \
-        "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x38\x21"
-        , buff, "packet W: 483/484, R 1 to 485/486")
+    # tech adapter read
+    if 0:
+        # Generated from packet 483/484
+        # bulk2 aggregate: packet W: 483/484, 1 to R 485/486
+        buff = cmd.bulk2b(dev, 
+            "\x3B\x0C\x22\x00\xC0\x00\x00\x3B\x0E\x22\x00\xC0\x00\x00\x3B\x1A" \
+            "\x22\x00\xC0\x18\x00\x40\x0E\x01"
+            )
+        validate_read(
+            "\x11\x00\x54\x41\x32\x34\x30\x56\x4C\x56\x5F\x46\x58\x00\x00\x00" \
+            "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x38\x21"
+            , buff, "packet W: 483/484, R 1 to 485/486")
     # Generated from packet 499/500
     bulkWrite(0x02, "\x48\x00\x20\x00\x00\x50\x12\x00\x00\x00")
     # Generated from packet 501/502
