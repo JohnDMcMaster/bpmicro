@@ -204,16 +204,18 @@ def boot_cold(dev):
         "\x57\x81\x00\x0C\x04\x30"
         )
     validate_read("\x04\x00", buff, "packet W: 791/792, R 1 to 793/794")
-    # Generated from packet 795/796
-    # bulk2 aggregate: packet W: 795/796, 1 to R 797/798
-    buff = cmd.bulk2b(dev, 
-        "\x3B\x0C\x22\x00\xC0\x00\x00\x3B\x0E\x22\x00\xC0\x00\x00\x3B\x1A" \
-        "\x22\x00\xC0\x18\x00\x40\x0E\x01"
-        )
-    validate_read(
-        "\x11\x00\x54\x41\x32\x34\x30\x56\x4C\x56\x5F\x46\x58\x00\x00\x00" \
-        "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x38\x21"
-        , buff, "packet W: 795/796, R 1 to 797/798")
+    if 0:
+        # TA read
+        # Generated from packet 795/796
+        # bulk2 aggregate: packet W: 795/796, 1 to R 797/798
+        buff = cmd.bulk2b(dev, 
+            "\x3B\x0C\x22\x00\xC0\x00\x00\x3B\x0E\x22\x00\xC0\x00\x00\x3B\x1A" \
+            "\x22\x00\xC0\x18\x00\x40\x0E\x01"
+            )
+        validate_read(
+            "\x11\x00\x54\x41\x32\x34\x30\x56\x4C\x56\x5F\x46\x58\x00\x00\x00" \
+            "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x38\x21"
+            , buff, "packet W: 795/796, R 1 to 797/798")
     # Generated from packet 799/800
     # bulk2 aggregate: packet W: 799/800, 1 to R 801/802
     # Generated from packet 803/804

@@ -5,17 +5,38 @@ import fx2
 import bp1410
 import bp1600
 import cmd
+import time
+import binascii
 from usb import usb_wraps, validate_read, USBAdapt
 
 import usb1
+
+# BP1600 POST slightly over 10 seconds
+def wait_post(dev, timeout=15.0):
+    bulkRead, bulkWrite, controlRead, controlWrite = usb_wraps(dev)
+
+    tstart = time.time()
+    printed = False
+    while True:
+        if time.time() - tstart > timeout:
+            raise Exception("Timeout waiting for POST")
+        buff = controlRead(0xC0, 0xB0, 0x0000, 0x0000, 4096)
+        if buff == "\x00\x00\x00":
+            break
+        if not printed:
+            print("POST: waiting")
+            printed = True
+        if buff != "\x01\xFF\x00":
+            print('WARNING: unexpected POST status: %s' % binascii.hexlify(buff))
+        time.sleep(0.05)
+    if printed:
+        print('POST: ok after %0.1f sec' % (time.time() - tstart))
 
 def init_adapter(dev):
     bulkRead, bulkWrite, controlRead, controlWrite = usb_wraps(dev)
 
     fx2.load_fx2(dev)
-
-    buff = controlRead(0xC0, 0xB0, 0x0000, 0x0000, 4096)
-    validate_read("\x00\x00\x00", buff, "packet 633/634")
+    wait_post(dev)
 
     buff = controlRead(0xC0, 0xB0, 0x0000, 0x0000, 4096)
     validate_read("\x00\x00\x00", buff, "packet 641/642")
