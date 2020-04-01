@@ -47,10 +47,13 @@ def init_adapter(dev):
 
 def init_dev(dev, verbose=False):
     devsig = init_adapter(dev)
-    {
+    init_dev = {
         "\x08\x16\x01\x00": bp1410.init_dev,
         "\x16":             bp1600.init_dev,
-        }[devsig](dev, verbose=verbose)
+        }[devsig]
+
+    init_dev = bp1410.init_dev
+    init_dev(dev, verbose=verbose)
 
 def open_dev(usbcontext=None, verbose=False):
     if usbcontext is None:

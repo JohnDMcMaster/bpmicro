@@ -2,6 +2,9 @@ BP Microsystems open source driver
 Developed against BP 1410
 
 
+sudo pip install libusb1
+
+
 ********************************************************************************
 Why does this project exist?
 ********************************************************************************
@@ -83,4 +86,8 @@ Now:
 -Edit devs.py to add your device by adding import and adding to list
 -Test by running a command like: python main.py read pic17c43
     Disconnect from vmware if you haven't already
+
+
+
+python scrape_dev.py bp1410-84_2020-03-31_s87c751/2020-03-31_05_win_s87c751_read_pat-cnt_cont-n_id-n.pcapng  >bpmicro/mcs51/s87c751.py
 

@@ -5,7 +5,6 @@ from bpmicro import cmd
 from bpmicro import util
 from bpmicro.usb import validate_read
 from bpmicro.usb import usb_wraps
-from bpmicro.bp1410_fw import load_fx2
 import pic16f84_fw
 import bpmicro.device
 

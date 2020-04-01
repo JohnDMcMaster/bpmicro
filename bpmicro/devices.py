@@ -1,7 +1,7 @@
 from mcs51 import i87c51
 from pic import pic16c554, pic17c43
 from pic import pic16f84
-from mcs51 import at89c51
+from mcs51 import at89c51, s87c751
 
 class_s2c = {
     'i87c51': i87c51.I87C51,
@@ -9,6 +9,7 @@ class_s2c = {
     'pic17c43': pic17c43.PIC17C43,
     'pic16f84': pic16f84.PIC16F84,
     'at89c51': at89c51.AT89C51,
+    's87c751': s87c751.Device,
     }
 
 def get(bp, device, verbose=False):
