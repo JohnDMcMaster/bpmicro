@@ -1,15 +1,16 @@
 # Atomic: indicates commands must be executed in sequence
 # trying to insert debugging commands likecmd.cmd_01() fail
-        
-import fx2
-import bp1410
-import bp1600
-import cmd
+
+from bpmicro import fx2
+from bpmicro import bp1410
+from bpmicro import bp1600
+from . import cmd
 import time
 import binascii
-from usb import usb_wraps, validate_read, USBAdapt
+from bpmicro.usb import usb_wraps, validate_read, USBAdapt
 
 import usb1
+
 
 # BP1600 POST slightly over 10 seconds
 def wait_post(dev, timeout=15.0):
@@ -27,10 +28,12 @@ def wait_post(dev, timeout=15.0):
             print("POST: waiting")
             printed = True
         if buff != "\x01\xFF\x00":
-            print('WARNING: unexpected POST status: %s' % binascii.hexlify(buff))
+            print(('WARNING: unexpected POST status: %s' %
+                   binascii.hexlify(buff)))
         time.sleep(0.05)
     if printed:
-        print('POST: ok after %0.1f sec' % (time.time() - tstart))
+        print(('POST: ok after %0.1f sec' % (time.time() - tstart)))
+
 
 def init_adapter(dev):
     bulkRead, bulkWrite, controlRead, controlWrite = usb_wraps(dev)
@@ -45,32 +48,35 @@ def init_adapter(dev):
     _prefix, buff, _size = cmd.bulk86_next_read(dev)
     return str(buff)
 
+
 def init_dev(dev, verbose=False):
     devsig = init_adapter(dev)
     init_dev = {
         "\x08\x16\x01\x00": bp1410.init_dev,
-        "\x16":             bp1600.init_dev,
-        }[devsig]
+        "\x16": bp1600.init_dev,
+    }[devsig]
 
     init_dev = bp1410.init_dev
     init_dev(dev, verbose=verbose)
+
 
 def open_dev(usbcontext=None, verbose=False):
     if usbcontext is None:
         usbcontext = usb1.USBContext()
 
     if verbose:
-        print 'Scanning for devices...'
+        print('Scanning for devices...')
     for udev in usbcontext.getDeviceList(skip_on_error=True):
         vid = udev.getVendorID()
         pid = udev.getProductID()
         if (vid, pid) == (0x14b9, 0x0001):
             if verbose:
-                print 'Found: Bus %03i Device %03i: ID %04x:%04x' % (
-                        udev.getBusNumber(), udev.getDeviceAddress(),
-                        vid, pid)
+                print(
+                    ('Found: Bus %03i Device %03i: ID %04x:%04x' %
+                     (udev.getBusNumber(), udev.getDeviceAddress(), vid, pid)))
             return udev.open()
     raise Exception("Failed to find a device")
+
 
 def get(init=True, verbose=False):
     '''Connect to USB device and return a BP1410 object'''

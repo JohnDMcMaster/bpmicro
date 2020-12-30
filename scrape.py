@@ -17,23 +17,35 @@ args = None
 prefix = ' ' * 8
 indent = ''
 line_buff = []
+
+
 def lines_clear():
     del line_buff[:]
+
+
 def lines_commit():
     for line in line_buff:
         fout.write(line + '\n')
     del line_buff[:]
+
+
 def line(s):
     line_buff.append('%s%s' % (indent, s))
+
+
 def inc_indent():
     global indent
     indent += '    '
+
+
 def dec_indent():
     global indent
     indent = indent[4:]
 
+
 dumb = False
 omit_ro = True
+
 
 def emit_ro():
     '''Return true if keeping ro. Otherwise clear line buffer and return false'''
@@ -43,8 +55,11 @@ def emit_ro():
     else:
         return True
 
+
 hash_orig = set(fw.hash2bin.keys())
 hash_used = set()
+
+
 def fmt_terse(data, pktn=None):
     data = str(data)
     h = fw.fwhash(data)
@@ -61,11 +76,13 @@ def fmt_terse(data, pktn=None):
 
     return dump_packet(data)
 
+
 def dump_packet(data):
     ret = str2hex(data, prefix=prefix)
     if len(data) > 16:
         ret += '\n%s' % prefix
     return ret
+
 
 def pkt_strip(p):
     pprefix = ord(p[0])
@@ -85,16 +102,19 @@ def pkt_strip(p):
         return (p[1:1 + size], True, pprefix)
     # Not supposed to happen
     else:
-        print(fmt_terse(p))
+        print((fmt_terse(p)))
         print(size)
         raise Exception("Bad size")
+
 
 class CmpFail(Exception):
     pass
 
+
 def cmp_buff(exp, act):
     if len(exp) != len(act):
         raise CmpFail("Exp: %d, act: %d" % (len(exp), len(act)))
+
 
 def cmp_mask(exp, mask, act):
     if len(exp) != len(act):
@@ -111,8 +131,10 @@ def cmp_mask(exp, mask, act):
             hexdump(act, indent='  ', label='actual')
             raise CmpFail("Exp: 0x%02X, act: 0x%02X" % (ord(exp), ord(actc)))
 
+
 class OutOfPackets(Exception):
     pass
+
 
 class Scraper(object):
     def __init__(self):
@@ -120,12 +142,13 @@ class Scraper(object):
         self.ps = None
         # Packets index
         self.pi = None
-        
+
     def nextp(self):
         ppi = self.pi + 1
         while True:
             if ppi >= len(self.ps):
-                raise OutOfPackets("Out of packets, started packet %d, at %d" % (self.pi, ppi))
+                raise OutOfPackets("Out of packets, started packet %d, at %d" %
+                                   (self.pi, ppi))
             p = self.ps[ppi]
             if p['type'] != 'comment':
                 return ppi, p
@@ -147,7 +170,7 @@ class Scraper(object):
             raise Exception()
         if len and len != p['wLength']:
             raise Exception()
-            
+
         return self.pi + 1
 
     def check_bulk2(self, cmd):
@@ -158,17 +181,18 @@ class Scraper(object):
     def bulk2(self, p_w, p_rs):
         cmd = binascii.unhexlify(p_w['data'])
         reply_all = self.bulk2_combine_packets(p_rs)
-    
+
         pack_str = 'packet W: %s/%s, R %d to %s/%s' % (
-                p_w['packn'][0], p_w['packn'][1],
-                len(p_rs),
-                p_rs[-1]['packn'][0], p_rs[-1]['packn'][1])
-        line('buff = cmd.bulk2b(dev, %s)' % (fmt_terse(cmd, p_w['packn'][0]),))
-        
+            p_w['packn'][0], p_w['packn'][1], len(p_rs), p_rs[-1]['packn'][0],
+            p_rs[-1]['packn'][1])
+        line('buff = cmd.bulk2b(dev, %s)' %
+             (fmt_terse(cmd, p_w['packn'][0]), ))
+
         if self.check_bulk2(cmd):
             #line('# Discarded %d / %d bytes => %d bytes' % (len(reply_full) - len(reply), len(reply_full), len(reply)))
-            line('validate_read(%s, buff, "%s")' % (fmt_terse(reply_all, p_rs[-1]['packn'][0]), pack_str))
-    
+            line('validate_read(%s, buff, "%s")' %
+                 (fmt_terse(reply_all, p_rs[-1]['packn'][0]), pack_str))
+
         startup_end_cmd = \
             "\x1D\x10\x01\x09\x00\x00\x00\x15\x60\x00\x00\x00\x00\x00\x00\x00" \
             "\x00\x00\x00\x00\x00\x00\x1C\x30\x00\x00\x00\x00\x00\x00\x00\x48" \
@@ -181,7 +205,7 @@ class Scraper(object):
             line('')
             line('')
             line('')
-    
+
     def bulk2_next_prs(self, p_r=None):
         p_rs = []
         if p_r:
@@ -206,7 +230,7 @@ class Scraper(object):
                 pprefix_str = ', prefix=0x%02X' % pprefix
                 raise Exception(pprefix_str)
         return reply_all
-    
+
     def bulk2_get_reply(self, p_r=None):
         '''
         Read all following bulk2 packets and aggregate response
@@ -214,16 +238,16 @@ class Scraper(object):
         '''
         p_rs = self.bulk2_next_prs(p_r)
         return p_rs, self.bulk2_combine_packets(p_rs)
-    
+
     def peek_bulk2(self, p):
         '''bulk2 command resulting in read(s)'''
-    
+
         p_w = p
         #pi, p_r = nextp()
         p_rs, reply = self.bulk2_get_reply()
         # Should have at least one reply
         prl = p_rs[-1]
-    
+
         cmd = binascii.unhexlify(p_w['data'])
         '''
         reply_full = binascii.unhexlify(p_r['data'])
@@ -232,12 +256,11 @@ class Scraper(object):
             pprefix_str = ', prefix=0x%02X' % pprefix
             raise Exception(pprefix_str)
         '''
-    
-        line('# bulk2 aggregate: packet W: %s/%s, %d to R %s/%s' % (
-                p_w['packn'][0], p_w['packn'][1],
-                len(p_rs),
-                prl['packn'][0], prl['packn'][1]))
-    
+
+        line('# bulk2 aggregate: packet W: %s/%s, %d to R %s/%s' %
+             (p_w['packn'][0], p_w['packn'][1], len(p_rs), prl['packn'][0],
+              prl['packn'][1]))
+
         if cmd == "\x01":
             if emit_ro():
                 line('cmd.cmd_01(dev)')
@@ -289,7 +312,9 @@ class Scraper(object):
                     line('cmd.sm_info24(dev)')
                 else:
                     #raise Exception("Unexpected read")
-                    line('# Unexpected (SM?) read, falling back to low level command')
+                    line(
+                        '# Unexpected (SM?) read, falling back to low level command'
+                    )
                     self.bulk2(p_w, p_rs)
         elif cmd == "\x45\x01\x00\x00\x31\x00\x06":
             cmp_buff( \
@@ -314,16 +339,17 @@ class Scraper(object):
         #elif len(cmd) % 3 == 0 and cmd[0] == "\x57" and cmd[-1] == "\x00":
         elif len(cmd) in (3, 6) and cmd[0] == "\x57" and cmd[-1] == "\x00":
             cmds = ''
-            for i in xrange(0, len(cmd), 3):
+            for i in range(0, len(cmd), 3):
                 if cmd[i] != "\x57":
                     raise Exception()
-                if cmd[i+2] != "\x00":
+                if cmd[i + 2] != "\x00":
                     raise Exception()
-                cmds += cmd[i+1]
+                cmds += cmd[i + 1]
             if cmds == '\x85':
                 line('cmd.check_cont(dev)')
             else:
-                line('cmd.cmd_57s(dev, %s, %s)' % (fmt_terse(cmds), fmt_terse(reply)))
+                line('cmd.cmd_57s(dev, %s, %s)' %
+                     (fmt_terse(cmds), fmt_terse(reply)))
         # Unknown response
         # Do generic bulk read
         else:
@@ -340,11 +366,11 @@ class Scraper(object):
             pprefix_str = ', prefix=0x%02X' % pprefix
             raise Exception(pprefix_str)
         #line('# Discarded %d / %d bytes => %d bytes' % (len(reply_full) - len(reply), len(reply_full), len(reply)))
-        pack_str = 'packet %s/%s' % (
-                 p['packn'][0], p['packn'][1])
+        pack_str = 'packet %s/%s' % (p['packn'][0], p['packn'][1])
         line('_prefix, buff, _size = cmd.bulk86_next_read(dev)')
-        line('validate_read(%s, buff, "%s")' % (fmt_terse(reply, p['packn'][0]), pack_str))
-    
+        line('validate_read(%s, buff, "%s")' %
+             (fmt_terse(reply, p['packn'][0]), pack_str))
+
     def bulk_write(self, p):
         '''
         bulkWrite(0x02, "\x01")
@@ -353,7 +379,8 @@ class Scraper(object):
         # bulkWrite(0x%02X
         if p['endp'] != 0x02:
             cmd = binascii.unhexlify(p['data'])
-            line('bulkWrite(0x%02X, %s)' % (p['endp'], fmt_terse(cmd, p['packn'][0])))
+            line('bulkWrite(0x%02X, %s)' %
+                 (p['endp'], fmt_terse(cmd, p['packn'][0])))
         # Write followed by response read?
         # bulk2(
         elif not dumb and self.peekp()['type'] == 'bulkRead':
@@ -383,24 +410,16 @@ class Scraper(object):
                 line('cmd.cmd_4C(dev)')
             elif cmd[0] == "\x57" and len(cmd) == 7:
                 c57a = cmd[0:3]
-                cmp_mask(
-                        "\x57\x00\x00" ,
-                        "\xFF\x00\xFF" ,
-                        c57a)
-    
+                cmp_mask("\x57\x00\x00", "\xFF\x00\xFF", c57a)
+
                 c50a = cmd[3:]
-                cmp_mask(
-                        "\x50\x00\x00\x00" ,
-                        "\xFF\x00\xFF\xFF" ,
-                        c50a)
-                
-                line('cmd.cmd_57_50(dev, %s, %s)' % (fmt_terse(c57a[1]), fmt_terse(c50a[1])))
+                cmp_mask("\x50\x00\x00\x00", "\xFF\x00\xFF\xFF", c50a)
+
+                line('cmd.cmd_57_50(dev, %s, %s)' %
+                     (fmt_terse(c57a[1]), fmt_terse(c50a[1])))
             elif cmd[0] == "\x50":
                 # ex: "\x50\x9F\x09\x00\x00"
-                cmp_mask(
-                        "\x50\x00\x00\x00\x00",
-                        "\xFF\x00\x00\xFF\xFF",
-                        cmd)
+                cmp_mask("\x50\x00\x00\x00\x00", "\xFF\x00\x00\xFF\xFF", cmd)
                 line('cmd.cmd_50(dev, %s)' % (fmt_terse(cmd[1:3])))
             else:
                 line('bulkWrite(0x02, %s)' % (fmt_terse(cmd, p['packn'][0])))
@@ -443,7 +462,7 @@ if __name__ == "__main__":
 
     def dump_fw(self, save):
         line('# my_fw.py')
-        new_fw = set(fw.hash2bin.keys()) - hash_orig 
+        new_fw = set(fw.hash2bin.keys()) - hash_orig
         line('# %u new firmwares' % len(new_fw))
         # save firmwares
         fw_dir = os.path.join(fw.FW_DIR, 'tmp')
@@ -465,12 +484,11 @@ if __name__ == "__main__":
                     fn = list(fns)[0]
                     line('#   %s: %s' % (h, fn))
                 else:
-                    line('#   %s' % (h,))
+                    line('#   %s' % (h, ))
                     for fn in fns:
-                        line('#     %s' % (fn,))
-    
-        lines_commit()
+                        line('#     %s' % (fn, ))
 
+        lines_commit()
 
     def file_prefix(self):
         line('# Generated from scrape.py')
@@ -481,11 +499,11 @@ if __name__ == "__main__":
         line('from bpmicro import fw')
         line('import usb1')
         line('')
-    
+
         # remove all comments to make processing easier
         # we'll add our own anyway
         # ps = filter(lambda p: p['type'] != 'comment', ps)
-        
+
         line('def replay(dev):')
         inc_indent()
         line("bulkRead, bulkWrite, controlRead, controlWrite = usb_wraps(dev)")
@@ -497,7 +515,8 @@ if __name__ == "__main__":
             line('# %s' % p['v'])
             comment = True
         elif p['type'] == 'controlRead':
-            if not dumb and (p['bRequest'], p['wValue'], p['wIndex'], p['wLength']) == (0xC0, 0xB0, 0x0000, 0x0000):
+            if not dumb and (p['bRequest'], p['wValue'], p['wIndex'],
+                             p['wLength']) == (0xC0, 0xB0, 0x0000, 0x0000):
                 pi = self.eat_packet('bulkRead')
                 line('cmd.readB0(dev)')
             else:
@@ -508,19 +527,21 @@ if __name__ == "__main__":
                 # NOTE:: req max 4096 but got 3
                 validate_read("\x00\x00\x00", buff, "packet 6/7")
                 '''
-                line('buff = controlRead(0x%02X, 0x%02X, 0x%04X, 0x%04X, %d)' % (
-                        p['bRequestType'], p['bRequest'], p['wValue'], p['wIndex'], p['wLength']))
+                line('buff = controlRead(0x%02X, 0x%02X, 0x%04X, 0x%04X, %d)' %
+                     (p['bRequestType'], p['bRequest'], p['wValue'],
+                      p['wIndex'], p['wLength']))
                 data = binascii.unhexlify(p['data'])
                 #line('# Req: %d, got: %d' % (p['wLength'], len(data)))
-                line('validate_read(%s, buff, "packet %s/%s")' % (
-                        fmt_terse(data, p['packn'][0]), p['packn'][0], p['packn'][1]))
+                line('validate_read(%s, buff, "packet %s/%s")' % (fmt_terse(
+                    data, p['packn'][0]), p['packn'][0], p['packn'][1]))
         elif p['type'] == 'controlWrite':
             '''
             controlWrite(0x40, 0xB2, 0x0000, 0x0000, "")
             '''
             data = binascii.unhexlify(p['data'])
-            line('buff = controlWrite(0x%02X, 0x%02X, 0x%04X, 0x%04X, %s)' % (
-                    p['bRequestType'], p['bRequest'], p['wValue'], p['wIndex'], fmt_terse(data, pktn=p['packn'][0])))
+            line('buff = controlWrite(0x%02X, 0x%02X, 0x%04X, 0x%04X, %s)' %
+                 (p['bRequestType'], p['bRequest'], p['wValue'], p['wIndex'],
+                  fmt_terse(data, pktn=p['packn'][0])))
         elif p['type'] == 'bulkRead':
             self.bulk86_next_read(p)
         elif p['type'] == 'bulkWrite':
@@ -530,17 +551,20 @@ if __name__ == "__main__":
         if not comment:
             lines_commit()
 
+    def loop_postfix(self):
+        pass
+
     def dump(self, j, save=False):
         self.pi = 0
         self.ps = j['data']
-    
+
         self.file_prefix()
-        
+
         while self.pi < len(self.ps):
             p = self.ps[self.pi]
             self.parse_next(p)
             self.pi += 1
-    
+
         self.loop_postfix()
         lines_commit()
         dec_indent()
@@ -553,13 +577,16 @@ if __name__ == "__main__":
 
         self.dump_fw(save)
 
+
 def load_json(fin, usbrply="", dumb=False):
     if fin.find('.cap') >= 0 or fin.find('.pcapng') >= 0:
         json_fn = '/tmp/scrape.json'
         if dumb:
-            cmd = 'usbrply --no-packet-numbers --no-setup --no-comment --fx2 --device-hi %s -j %s >%s' % (usbrply, fin, json_fn)
+            cmd = 'usbrply --no-packet-numbers --no-setup --no-comment --fx2 --device-hi %s -j %s >%s' % (
+                usbrply, fin, json_fn)
         else:
-            cmd = 'usbrply --no-setup --comment --fx2 --device-hi %s -j %s >%s' % (usbrply, fin, json_fn)
+            cmd = 'usbrply --no-setup --comment --fx2 --device-hi %s -j %s >%s' % (
+                usbrply, fin, json_fn)
         subprocess.check_call(cmd, shell=True)
     else:
         json_fn = fin
@@ -569,11 +596,14 @@ def load_json(fin, usbrply="", dumb=False):
 
 
 if __name__ == "__main__":
-    import argparse 
-    
+    import argparse
+
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('--dumb', action='store_true')
-    add_bool_arg(parser, '--omit-ro', default=True, help='Omit read only requests (ex: get SM info)')
+    add_bool_arg(parser,
+                 '--omit-ro',
+                 default=True,
+                 help='Omit read only requests (ex: get SM info)')
     parser.add_argument('--big-thresh', type=int, default=256)
     parser.add_argument('--usbrply', default='')
     parser.add_argument('--save', action='store_true', help='Save firmware')
@@ -586,7 +616,7 @@ if __name__ == "__main__":
     if args.w:
         filename, file_extension = os.path.splitext(args.fin)
         fnout = filename + '.py'
-        print('Selected output file %s' % fnout)
+        print(('Selected output file %s' % fnout))
         assert fnout != args.fin and fnout != json_fn
         fout = open(fnout, 'w')
 

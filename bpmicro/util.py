@@ -6,35 +6,45 @@ import sys
 import struct
 from collections import namedtuple
 
-def print_debug(s = None):
+
+def print_debug(s=None):
     if False:
-        print 'DEBUG: %s' % s
+        print(('DEBUG: %s' % s))
+
 
 def add_bool_arg(parser, yes_arg, default=False, **kwargs):
     dashed = yes_arg.replace('--', '')
     dest = dashed.replace('-', '_')
-    parser.add_argument(yes_arg, dest=dest, action='store_true', default=default, **kwargs)
-    parser.add_argument('--no-' + dashed, dest=dest, action='store_false', **kwargs)
+    parser.add_argument(yes_arg,
+                        dest=dest,
+                        action='store_true',
+                        default=default,
+                        **kwargs)
+    parser.add_argument('--no-' + dashed,
+                        dest=dest,
+                        action='store_false',
+                        **kwargs)
+
 
 def hexdump(data, label=None, indent='', address_width=8, f=sys.stdout):
     def isprint(c):
         return c >= ' ' and c <= '~'
 
     if label:
-        print label
-    
+        print(label)
+
     bytes_per_half_row = 8
     bytes_per_row = 16
     data = bytearray(data)
     data_len = len(data)
-    
+
     def hexdump_half_row(start):
         left = max(data_len - start, 0)
-        
+
         real_data = min(bytes_per_half_row, left)
 
-        f.write(''.join('%02X ' % c for c in data[start:start+real_data]))
-        f.write(''.join('   '*(bytes_per_half_row-real_data)))
+        f.write(''.join('%02X ' % c for c in data[start:start + real_data]))
+        f.write(''.join('   ' * (bytes_per_half_row - real_data)))
         f.write(' ')
 
         return start + bytes_per_half_row
@@ -52,14 +62,20 @@ def hexdump(data, label=None, indent='', address_width=8, f=sys.stdout):
         left = data_len - row_start
         real_data = min(bytes_per_row, left)
 
-        f.write(''.join([c if isprint(c) else '.' for c in str(data[row_start:row_start+real_data])]))
+        f.write(''.join([
+            c if isprint(c) else '.'
+            for c in str(data[row_start:row_start + real_data])
+        ]))
         f.write((" " * (bytes_per_row - real_data)) + "|\n")
+
 
 '''
     (
     "\x08\x84\xA4\x06\x02\x00\x26\x00\x43\x00\xC0\x03\x00\x08\x10\x24"
     "\x00\x00\xC0\x1E\x00\x00\x85\x00")
 '''
+
+
 def str2hex(buff, prefix='', terse=True):
     if len(buff) == 0:
         return '""'
@@ -67,7 +83,7 @@ def str2hex(buff, prefix='', terse=True):
     ret = ''
     if terse and len(buff) > 16:
         ret += '\n'
-    for i in xrange(len(buff)):
+    for i in range(len(buff)):
         if i % 16 == 0:
             if i != 0:
                 ret += '" \\\n'
@@ -75,9 +91,10 @@ def str2hex(buff, prefix='', terse=True):
                 ret += '"'
             if not terse or len(buff) > 16:
                 ret += '%s"' % prefix
-            
-        ret += "\\x%02X" % (buff[i],)
+
+        ret += "\\x%02X" % (buff[i], )
     return ret + '"'
+
 
 def where(pos=1):
     # 0 represents this line
@@ -85,14 +102,15 @@ def where(pos=1):
     callerframerecord = inspect.stack()[pos]
     frame = callerframerecord[0]
     info = inspect.getframeinfo(frame)
-    print '%s.%s():%d' % (info.filename, info.function, info.lineno)
+    print(('%s.%s():%d' % (info.filename, info.function, info.lineno)))
+
 
 # Print timestamps in front of all output messages
 class IOTimestamp(object):
     def __init__(self, obj=sys, name='stdout'):
         self.obj = obj
         self.name = name
-        
+
         self.fd = obj.__dict__[name]
         obj.__dict__[name] = self
         self.nl = True
@@ -103,7 +121,7 @@ class IOTimestamp(object):
 
     def flush(self):
         self.fd.flush()
-       
+
     def write(self, data):
         parts = data.split('\n')
         for i, part in enumerate(parts):
@@ -119,9 +137,17 @@ class IOTimestamp(object):
             # The last element has no newline
             self.nl = i != (len(parts) - 1)
 
+
 # Log file descriptor to file
 class IOLog(object):
-    def __init__(self, obj=sys, name='stdout', out_fn=None, out_fd=None, mode='a', shift=False, multi=False):
+    def __init__(self,
+                 obj=sys,
+                 name='stdout',
+                 out_fn=None,
+                 out_fd=None,
+                 mode='a',
+                 shift=False,
+                 multi=False):
         if not multi:
             if out_fd:
                 self.out_fd = out_fd
@@ -138,7 +164,7 @@ class IOLog(object):
                         continue
                     shutil.move(out_fn, dst)
                     break
-            
+
             hdr = mode == 'a' and os.path.exists(out_fn)
             self.out_fd = open(out_fn, mode)
             if hdr:
@@ -146,10 +172,10 @@ class IOLog(object):
                 self.out_fd.write('*' * 80 + '\n')
                 self.out_fd.write('*' * 80 + '\n')
                 self.out_fd.write('Log rolled over\n')
-        
+
         self.obj = obj
         self.name = name
-        
+
         self.fd = obj.__dict__[name]
         obj.__dict__[name] = self
         self.nl = True
@@ -160,35 +186,37 @@ class IOLog(object):
 
     def flush(self):
         self.fd.flush()
-       
+
     def write(self, data):
         self.fd.write(data)
         self.out_fd.write(data)
+
 
 def mkstruct(name, encoding, size=None):
     if len(encoding) % 2 != 0:
         raise Exception('Need even number of elements')
     fmts = '<'
     names = []
-    for i in xrange(0, len(encoding), 2):
-        fname, fmt = encoding[i:i+2]
+    for i in range(0, len(encoding), 2):
+        fname, fmt = encoding[i:i + 2]
         names.append(fname)
         fmts += fmt
     calc = struct.calcsize(fmts)
     if size and size != calc:
-        raise Exception("Expect size %d (0x%02X), got %d (0x%02X)" % (size, size, calc, calc))
+        raise Exception("Expect size %d (0x%02X), got %d (0x%02X)" %
+                        (size, size, calc, calc))
     return fmts, namedtuple(name, names)
+
 
 def print_mkstruct(sm, filter=None):
     '''
-    for k, v in sm._asdict().iteritems():
+    for k, v in sm._asdict().items():
         if 'pad' not in k:
             print 'print "  %s: %%d" %% sm.%s' % (k, k)
     '''
-    for k, v in sm._asdict().iteritems():
-        if not filter or filter(k, v):
-            if type(k) in (str, unicode):
-                print "  %s: %s" % (k, v)
+    for k, v in sm._asdict().items():
+        if not filter or list(filter(k, v)):
+            if type(k) in (str, str):
+                print(("  %s: %s" % (k, v)))
             else:
-                print "  %s: %d" % (k, v)
-
+                print(("  %s: %d" % (k, v)))

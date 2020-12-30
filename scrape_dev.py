@@ -50,7 +50,7 @@ class Device(bpmicro.device.Device):
         ''')
 
     def loop_postfix(self):
-        assert self.found_ret
+        # assert self.found_ret, "Couldn't find read buffer"
         line("return {\"code\": fw_in}")
 
     def check_bulk2(self, cmd):
@@ -62,12 +62,16 @@ class Device(bpmicro.device.Device):
         else:
             return True
 
+
 if __name__ == "__main__":
-    import argparse 
-    
+    import argparse
+
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('--dumb', action='store_true')
-    add_bool_arg(parser, '--omit-ro', default=True, help='Omit read only requests (ex: get SM info)')
+    add_bool_arg(parser,
+                 '--omit-ro',
+                 default=True,
+                 help='Omit read only requests (ex: get SM info)')
     parser.add_argument('--big-thresh', type=int, default=255)
     parser.add_argument('--usbrply', default='')
     parser.add_argument('--save', action='store_true', help='Save firmware')
@@ -81,7 +85,7 @@ if __name__ == "__main__":
     if args.w:
         filename, file_extension = os.path.splitext(args.fin)
         fnout = filename + '.py'
-        print('Selected output file %s' % fnout)
+        print(('Selected output file %s' % fnout))
         assert fnout != args.fin and fnout != json_fn
         scrape.fout = open(fnout, 'w')
 

@@ -3,20 +3,22 @@ from bpmicro import cmd
 from bpmicro.util import add_bool_arg
 
 led_s2i = {
-            'fail': 1,
-            'active': 2,
-            'pass': 4,
-            'red': 1,
-            'orange': 2,
-            'green': 4,
-            }
+    'fail': 1,
+    'active': 2,
+    'pass': 4,
+    'red': 1,
+    'orange': 2,
+    'green': 4,
+}
 
 if __name__ == "__main__":
-    import argparse 
-    
+    import argparse
+
     parser = argparse.ArgumentParser(description='Control LED')
-    add_bool_arg(parser, '--cycle', default=False, help='') 
-    parser.add_argument('status', help='String value or 0-7 direct mask, 1: fail, 2: active, 4: pass')
+    add_bool_arg(parser, '--cycle', default=False, help='')
+    parser.add_argument(
+        'status',
+        help='String value or 0-7 direct mask, 1: fail, 2: active, 4: pass')
     args = parser.parse_args()
 
     try:

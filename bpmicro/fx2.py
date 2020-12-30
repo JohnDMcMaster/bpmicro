@@ -2,6 +2,7 @@ import time
 from bpmicro.usb import usb_wraps
 from bpmicro import fw
 
+
 def load_fx2(dev):
     _bulkRead, _bulkWrite, _controlRead, controlWrite = usb_wraps(dev)
 

@@ -5,9 +5,18 @@ from bpmicro.util import hexdump, add_bool_arg
 import json
 import os
 
-def run(operation, device,
-        code_fn, data_fn, config_fn,
-        cont, erase, verify, verbose, dir_, init=True):
+
+def run(operation,
+        device,
+        code_fn,
+        data_fn,
+        config_fn,
+        cont,
+        erase,
+        verify,
+        verbose,
+        dir_,
+        init=True):
     device_str = device
     '''
     Device: chip model
@@ -24,12 +33,12 @@ def run(operation, device,
         'erase': erase,
         'verify': verify,
         'verbose': verbose,
-        }
+    }
 
     if operation == 'list_device':
-        print 'Devices:'
+        print('Devices:')
         for device in sorted(devices.class_s2c.keys()):
-            print device
+            print(device)
     elif operation == 'nop':
         pass
     elif operation == 'program':
@@ -50,16 +59,16 @@ def run(operation, device,
         data = devcfg.get('data', None)
         config = devcfg.get('config', None)
         if not code_fn:
-            print
+            print("")
             hexdump(code, indent='  ', label='Code')
 
             if data:
-                print
+                print("")
                 hexdump(data, indent='  ', label='Data')
 
             if config:
-                print
-                print 'Configuration'
+                print("")
+                print('Configuration')
                 device.print_config(config)
         else:
             if dir_:
@@ -67,12 +76,13 @@ def run(operation, device,
                     os.mkdir(code_fn)
                 open(os.path.join(code_fn, 'code.bin'), 'w').write(code)
                 open(os.path.join(code_fn, 'data.bin'), 'w').write(data)
-                open(os.path.join(code_fn, 'config.json'), 'w').write(json.dumps(config))
+                open(os.path.join(code_fn, 'config.json'),
+                     'w').write(json.dumps(config))
             else:
-                print 'Writing to %s' % code_fn
+                print(('Writing to %s' % code_fn))
                 open(code_fn, 'w').write(code)
-    
-        print 'Complete'
+
+        print('Complete')
     elif operation == 'sum':
         raise Exception('FIXME')
     elif operation == 'blank':
@@ -84,26 +94,63 @@ def run(operation, device,
     else:
         raise Exception("Bad operation %s" % operation)
 
+
 def main():
-    import argparse 
-    
-    parser = argparse.ArgumentParser(description='Read/write device w/ BP Microsystems programmer')
-    add_bool_arg(parser, '--cont', default=True, help='Continuity check') 
-    add_bool_arg(parser, '--erase', default=None, help='Erase device (write only)') 
-    add_bool_arg(parser, '--verify', default=True, help='Read back after write (write only)') 
-    add_bool_arg(parser, '--verbose', default=True, help='More verbose output') 
-    add_bool_arg(parser, '--dir', default=None, help='Force input/output directory') 
-    add_bool_arg(parser, '--init', default=True, help='Advanced / developer only') 
-    parser.add_argument('operation', help='Operation: read, program, erase, protect, list_device, nop') 
-    parser.add_argument('device', nargs='?', help='Device to use') 
-    parser.add_argument('code', nargs='?', help='Read/write input/output file or directory: primary data such as EPROM or flash') 
-    parser.add_argument('data', nargs='?', help='Read/write input/output file: secondary data such as EEPROM') 
-    parser.add_argument('config', nargs='?', help='Read/write input/output file or directory: additional configuration') 
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description='Read/write device w/ BP Microsystems programmer')
+    add_bool_arg(parser, '--cont', default=True, help='Continuity check')
+    add_bool_arg(parser,
+                 '--erase',
+                 default=None,
+                 help='Erase device (write only)')
+    add_bool_arg(parser,
+                 '--verify',
+                 default=True,
+                 help='Read back after write (write only)')
+    add_bool_arg(parser, '--verbose', default=True, help='More verbose output')
+    add_bool_arg(parser,
+                 '--dir',
+                 default=None,
+                 help='Force input/output directory')
+    add_bool_arg(parser,
+                 '--init',
+                 default=True,
+                 help='Advanced / developer only')
+    parser.add_argument(
+        'operation',
+        help='Operation: read, program, erase, protect, list_device, nop')
+    parser.add_argument('device', nargs='?', help='Device to use')
+    parser.add_argument(
+        'code',
+        nargs='?',
+        help=
+        'Read/write input/output file or directory: primary data such as EPROM or flash'
+    )
+    parser.add_argument(
+        'data',
+        nargs='?',
+        help='Read/write input/output file: secondary data such as EEPROM')
+    parser.add_argument(
+        'config',
+        nargs='?',
+        help=
+        'Read/write input/output file or directory: additional configuration')
     args = parser.parse_args()
 
-    run(args.operation, args.device,
-            code_fn=args.code, data_fn=args.data, config_fn=args.config,
-            cont=args.cont, erase=args.erase, verify=args.verify, verbose=args.verbose, dir_=args.dir, init=args.init)
+    run(args.operation,
+        args.device,
+        code_fn=args.code,
+        data_fn=args.data,
+        config_fn=args.config,
+        cont=args.cont,
+        erase=args.erase,
+        verify=args.verify,
+        verbose=args.verbose,
+        dir_=args.dir,
+        init=args.init)
+
 
 if __name__ == "__main__":
     main()

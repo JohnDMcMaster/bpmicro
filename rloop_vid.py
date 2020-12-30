@@ -3,10 +3,10 @@ import sys
 import time
 
 if __name__ == "__main__":
-    import argparse 
-    
+    import argparse
+
     parser = argparse.ArgumentParser(description='Replay captured USB packets')
-    parser.add_argument('din', help='Input dir') 
+    parser.add_argument('din', help='Input dir')
     args = parser.parse_args()
 
     bini = 270
@@ -14,16 +14,16 @@ if __name__ == "__main__":
         fn = os.path.join(args.din, 'read-%0.5d.bin' % bini)
         if not os.path.exists(fn):
             break
-        
+
         os.system('clear')
-        print bini
-        
+        print(bini)
+
         # 4096 x ?
         dat = open(fn).read()
         rows = 4096 / 256
         cols = 4096 / rows
-        for row in xrange(rows):
-            for col in xrange(cols):
+        for row in range(rows):
+            for col in range(cols):
                 #if col > 209:
                 #    break
                 if col == cols / 2:
@@ -41,8 +41,6 @@ if __name__ == "__main__":
                 sys.stdout.write(c)
             sys.stdout.write('\n')
         sys.stdout.flush()
-        
+
         time.sleep(0.1)
         bini += 1
-
-

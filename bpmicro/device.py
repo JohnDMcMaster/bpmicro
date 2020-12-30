@@ -1,5 +1,6 @@
 from bpmicro.cmd import Unsupported
 
+
 class Device(object):
     def read(self, opts):
         '''
@@ -42,4 +43,4 @@ class Device(object):
 
     @staticmethod
     def print_config(config):
-        print config
+        print(config)
